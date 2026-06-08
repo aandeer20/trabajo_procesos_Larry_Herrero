@@ -1,0 +1,166 @@
+/* ── PÁGINA DE AUTENTICACIÓN ── */
+body.auth-page {
+    min-height: 100vh;
+    background-color: #f5f2ed;
+    display: flex;
+    flex-direction: column;
+}
+
+body.auth-page nav .nav-logo {
+    text-decoration: none;
+}
+
+body.auth-page nav .btn {
+    text-decoration: none;
+    display: inline-block;
+}
+
+.active-nav.btn-login {
+    background-color: #c9a84c;
+    color: #1a1a1a;
+}
+
+.active-nav.btn-register {
+    background-color: #b8973b;
+}
+
+.auth-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+.auth-card {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 44px 40px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+}
+
+.auth-card h2 {
+    font-size: 1.6rem;
+    color: #1a1a1a;
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.auth-switch {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.88rem;
+    color: #777;
+}
+
+.auth-switch a {
+    color: #c9a84c;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.error-msg {
+    color: #c0392b;
+    font-size: 0.85rem;
+    margin-top: 8px;
+    text-align: center;
+    min-height: 18px;
+    display: block;
+}
+
+/* ── DASHBOARD ── */
+.dashboard-nav-user {
+    color: #c9a84c;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.dashboard-nav-user span {
+    color: #ffffff;
+}
+
+.btn-logout {
+    background: transparent;
+    border: 1px solid #888;
+    color: #ccc;
+    padding: 8px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Georgia', serif;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.btn-logout:hover {
+    border-color: #c9a84c;
+    color: #c9a84c;
+}
+
+.dashboard-main {
+    max-width: 900px;
+    margin: 60px auto;
+    padding: 0 20px;
+}
+
+.dashboard-main h1 {
+    font-size: 2rem;
+    margin-bottom: 8px;
+    color: #1a1a1a;
+}
+
+.dashboard-main h1 span {
+    color: #c9a84c;
+}
+
+.dashboard-main .subtitle {
+    color: #888;
+    margin-bottom: 40px;
+    font-size: 1rem;
+}
+
+.dashboard-cards {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.dashboard-card {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 32px;
+    flex: 1;
+    min-width: 200px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    text-align: center;
+    cursor: pointer;
+    transition: box-shadow 0.2s, transform 0.2s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.dashboard-card:hover {
+    box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+    transform: translateY(-2px);
+}
+
+.dashboard-card .card-icon {
+    font-size: 2.4rem;
+    margin-bottom: 14px;
+}
+
+.dashboard-card h3 {
+    font-size: 1.05rem;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+}
+
+.dashboard-card p {
+    font-size: 0.88rem;
+    color: #888;
+    line-height: 1.5;
+}

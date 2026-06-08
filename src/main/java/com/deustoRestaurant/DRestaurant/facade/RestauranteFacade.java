@@ -24,13 +24,28 @@ public class RestauranteFacade {
         return restauranteService.actualizar(id, dto);
     }
 
-    @PutMapping("/{id}/aforo")
-    public RestauranteResponseDTO actualizarAforo(@PathVariable Long id, @RequestParam int aforo) {
-        return restauranteService.actualizarAforo(id, aforo);
+    @PutMapping("/{id}/aforo/comida")
+    public RestauranteResponseDTO actualizarAforoComida(@PathVariable Long id, @RequestParam int aforo) {
+        return restauranteService.actualizarAforoComida(id, aforo);
+    }
+
+    @PutMapping("/{id}/aforo/cena")
+    public RestauranteResponseDTO actualizarAforoCena(@PathVariable Long id, @RequestParam int aforo) {
+        return restauranteService.actualizarAforoCena(id, aforo);
+    }
+
+    @DeleteMapping("/{id}")
+    public RestauranteResponseDTO desactivar(@PathVariable Long id) {
+        return restauranteService.desactivar(id);
     }
 
     @GetMapping
     public List<RestauranteResponseDTO> obtenerTodos() {
         return restauranteService.obtenerTodos();
+    }
+
+    @GetMapping("/activos")
+    public List<RestauranteResponseDTO> obtenerActivos() {
+        return restauranteService.obtenerActivos();
     }
 }

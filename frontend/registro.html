@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear cuenta — DeustoRestaurant</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/auth.css">
+</head>
+<body class="auth-page">
+
+    <nav>
+        <a class="nav-logo" href="index.html">Deusto<span>Restaurant</span></a>
+        <div class="nav-buttons">
+            <a href="login.html" class="btn btn-login">Iniciar sesión</a>
+            <a href="registro.html" class="btn btn-register active-nav">Registrarse</a>
+        </div>
+    </nav>
+
+    <main class="auth-container">
+        <div class="auth-card">
+            <h2>Crear cuenta</h2>
+            <form id="form-registro" onsubmit="submitRegistro(event)">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="reg-nombre" placeholder="Tu nombre" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label>Apellidos</label>
+                    <input type="text" id="reg-apellidos" placeholder="Tus apellidos" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="reg-email" placeholder="tu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Teléfono</label>
+                    <input type="tel" id="reg-telefono" placeholder="600 000 000">
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label>Confirmar contraseña</label>
+                    <input type="password" id="reg-password2" placeholder="Repite la contraseña" required>
+                </div>
+                <p class="error-msg" id="reg-error"></p>
+                <button type="submit" class="btn-submit">Crear cuenta</button>
+            </form>
+            <div class="auth-switch">
+                ¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script src="js/registro.js"></script>
+</body>
+</html>

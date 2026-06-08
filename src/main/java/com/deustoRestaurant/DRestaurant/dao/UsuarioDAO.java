@@ -10,4 +10,5 @@ public interface UsuarioDAO extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByEmail(String email);
     List<Usuario> findByRol(Rol rol);
     List<Usuario> findByRolAndActivo(Rol rol, boolean activo);
+    List<Usuario> findByRestauranteIdAndRol(Long restauranteId, Rol rol);
 }

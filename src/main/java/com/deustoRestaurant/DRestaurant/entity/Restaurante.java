@@ -15,57 +15,116 @@ public class Restaurante {
 
     private String nombre;
     private String direccion;
-    private String horario;
-    private int aforoMaximo;
+    private String telefono;
+    private String horarioComida;
+    private String horarioCena;
+    private int aforoMaximoComida;
+    private int aforoMaximoCena;
+    private boolean activo = true;
+
+    @ManyToOne
+    @JoinColumn(name = "gerente_id")
+    private Usuario gerente;
 
     @OneToMany(mappedBy = "restaurante")
     private List<Reserva> reservas;
 
-	public Long getId() {
-		return id;
-	}
+    @OneToMany(mappedBy = "restaurante")
+    private List<Usuario> camareros;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public String getNombre() {
-		return nombre;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public void setNombre(String nombre) {
-		this.nombre = nombre;
-	}
+    public String getNombre() {
+        return nombre;
+    }
 
-	public String getDireccion() {
-		return direccion;
-	}
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
 
-	public void setDireccion(String direccion) {
-		this.direccion = direccion;
-	}
+    public String getDireccion() {
+        return direccion;
+    }
 
-	public String getHorario() {
-		return horario;
-	}
+    public void setDireccion(String direccion) {
+        this.direccion = direccion;
+    }
 
-	public void setHorario(String horario) {
-		this.horario = horario;
-	}
+    public String getTelefono() {
+        return telefono;
+    }
 
-	public int getAforoMaximo() {
-		return aforoMaximo;
-	}
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
 
-	public void setAforoMaximo(int aforoMaximo) {
-		this.aforoMaximo = aforoMaximo;
-	}
+    public String getHorarioComida() {
+        return horarioComida;
+    }
 
-	public List<Reserva> getReservas() {
-		return reservas;
-	}
+    public void setHorarioComida(String horarioComida) {
+        this.horarioComida = horarioComida;
+    }
 
-	public void setReservas(List<Reserva> reservas) {
-		this.reservas = reservas;
-	}
+    public String getHorarioCena() {
+        return horarioCena;
+    }
+
+    public void setHorarioCena(String horarioCena) {
+        this.horarioCena = horarioCena;
+    }
+
+    public int getAforoMaximoComida() {
+        return aforoMaximoComida;
+    }
+
+    public void setAforoMaximoComida(int aforoMaximoComida) {
+        this.aforoMaximoComida = aforoMaximoComida;
+    }
+
+    public int getAforoMaximoCena() {
+        return aforoMaximoCena;
+    }
+
+    public void setAforoMaximoCena(int aforoMaximoCena) {
+        this.aforoMaximoCena = aforoMaximoCena;
+    }
+
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public void setActivo(boolean activo) {
+        this.activo = activo;
+    }
+
+    public Usuario getGerente() {
+        return gerente;
+    }
+
+    public void setGerente(Usuario gerente) {
+        this.gerente = gerente;
+    }
+
+    public List<Reserva> getReservas() {
+        return reservas;
+    }
+
+    public void setReservas(List<Reserva> reservas) {
+        this.reservas = reservas;
+    }
+
+    public List<Usuario> getCamareros() {
+        return camareros;
+    }
+
+    public void setCamareros(List<Usuario> camareros) {
+        this.camareros = camareros;
+    }
 }

@@ -3,6 +3,7 @@ package com.deustoRestaurant.DRestaurant.facade;
 import com.deustoRestaurant.DRestaurant.dto.ReservaRequestDTO;
 import com.deustoRestaurant.DRestaurant.dto.ReservaResponseDTO;
 import com.deustoRestaurant.DRestaurant.entity.EstadoReserva;
+import com.deustoRestaurant.DRestaurant.entity.Turno;
 import com.deustoRestaurant.DRestaurant.service.ReservaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +32,11 @@ public class ReservaFacade {
         return reservaService.cambiarEstado(id, estado);
     }
 
+    @PutMapping("/{reservaId}/camarero/{camareroId}")
+    public ReservaResponseDTO asignarCamarero(@PathVariable Long reservaId, @PathVariable Long camareroId) {
+        return reservaService.asignarCamarero(reservaId, camareroId);
+    }
+
     @GetMapping("/restaurante/{id}")
     public List<ReservaResponseDTO> obtenerPorRestaurante(@PathVariable Long id) {
         return reservaService.obtenerPorRestaurante(id);
@@ -41,10 +47,18 @@ public class ReservaFacade {
         return reservaService.obtenerPorCliente(id);
     }
 
-    @GetMapping("/turno")
+    @GetMapping("/camarero")
     public List<ReservaResponseDTO> obtenerPorCamareroYFecha(
             @RequestParam Long camareroId,
             @RequestParam LocalDate fecha) {
         return reservaService.obtenerPorCamareroYFecha(camareroId, fecha);
+    }
+
+    @GetMapping("/turno")
+    public List<ReservaResponseDTO> obtenerPorRestauranteYTurno(
+            @RequestParam Long restauranteId,
+            @RequestParam LocalDate fecha,
+            @RequestParam Turno turno) {
+        return reservaService.obtenerPorRestauranteYTurno(restauranteId, fecha, turno);
     }
 }

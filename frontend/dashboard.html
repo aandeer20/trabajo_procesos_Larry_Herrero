@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio — DeustoRestaurant</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+
+    <nav>
+        <a class="nav-logo" href="index.html">Deusto<span>Restaurant</span></a>
+        <div class="dashboard-nav-user">
+            <span id="nav-nombre"></span>
+            <button class="btn-logout" onclick="cerrarSesion()">Cerrar sesión</button>
+        </div>
+    </nav>
+
+    <main class="dashboard-main">
+        <h1>Hola, <span id="bienvenida-nombre"></span></h1>
+        <p class="subtitle" id="subtitulo"></p>
+
+        <!-- Opciones CLIENTE -->
+        <div class="dashboard-cards" id="cards-cliente" style="display:none">
+            <a class="dashboard-card" href="#">
+                <div class="card-icon">📅</div>
+                <h3>Nueva reserva</h3>
+                <p>Reserva tu mesa para comida o cena en DeustoRestaurant.</p>
+            </a>
+            <a class="dashboard-card" href="#">
+                <div class="card-icon">📋</div>
+                <h3>Mis reservas</h3>
+                <p>Consulta, modifica o cancela tus reservas activas.</p>
+            </a>
+            <a class="dashboard-card" href="#">
+                <div class="card-icon">✉️</div>
+                <h3>Mensajes</h3>
+                <p>Consulta los mensajes del restaurante.</p>
+            </a>
+        </div>
+
+        <!-- Opciones CAMARERO -->
+        <div class="dashboard-cards" id="cards-camarero" style="display:none">
+            <a class="dashboard-card" href="#">
+                <div class="card-icon">📅</div>
+                <h3>Mis turnos</h3>
+                <p>Consulta las reservas asignadas a tu turno del día.</p>
+            </a>
+            <a class="dashboard-card" href="#">
+                <div class="card-icon">✅</div>
+                <h3>Gestionar reservas</h3>
+                <p>Marca reservas como completadas o no-show.</p>
+            </a>
+            <a class="dashboard-card" href="#">
+                <div class="card-icon">✉️</div>
+                <h3>Mensajes</h3>
+                <p>Consulta y envía mensajes al gerente.</p>
+            </a>
+        </div>
+
+        <!-- Opciones GERENTE -->
+        <div class="dashboard-cards" id="cards-gerente" style="display:none">
+            <a class="dashboard-card" href="#">
+                <div class="card-icon">🏠</div>
+                <h3>Mi restaurante</h3>
+                <p>Gestiona los datos y aforo de tu restaurante.</p>
+            </a>
+            <a class="dashboard-card" href="#">
+                <div class="card-icon">👨‍🍳</div>
+                <h3>Camareros</h3>
+                <p>Contrata, asigna y gestiona el equipo de camareros.</p>
+            </a>
+            <a class="dashboard-card" href="#">
+                <div class="card-icon">📋</div>
+                <h3>Reservas</h3>
+                <p>Consulta todas las reservas del restaurante.</p>
+            </a>
+            <a class="dashboard-card" href="#">
+                <div class="card-icon">✉️</div>
+                <h3>Mensajes</h3>
+                <p>Comunícate con tu equipo de camareros.</p>
+            </a>
+        </div>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

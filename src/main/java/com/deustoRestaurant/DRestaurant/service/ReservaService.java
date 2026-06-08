@@ -8,6 +8,7 @@ import com.deustoRestaurant.DRestaurant.dto.ReservaResponseDTO;
 import com.deustoRestaurant.DRestaurant.entity.EstadoReserva;
 import com.deustoRestaurant.DRestaurant.entity.Reserva;
 import com.deustoRestaurant.DRestaurant.entity.Restaurante;
+import com.deustoRestaurant.DRestaurant.entity.Turno;
 import com.deustoRestaurant.DRestaurant.entity.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,11 +32,16 @@ public class ReservaService {
         Restaurante restaurante = restauranteDAO.findById(dto.getRestauranteId())
                 .orElseThrow(() -> new RuntimeException("Restaurante no encontrado"));
 
-        // Issue #6: comprobar aforo antes de crear la reserva
-        int reservasActuales = reservaDAO.countByRestauranteIdAndFechaAndHoraAndEstadoNot(
-                dto.getRestauranteId(), dto.getFecha(), dto.getHora(), EstadoReserva.CANCELADA);
-        if (reservasActuales >= restaurante.getAforoMaximo()) {
-            throw new RuntimeException("Aforo máximo alcanzado para esa franja horaria");
+        // Comprobar aforo del turno correspondiente
+        int aforoMaximo = dto.getTurno() == Turno.COMIDA
+                ? restaurante.getAforoMaximoComida()
+                : restaurante.getAforoMaximoCena();
+
+        int reservasActuales = reservaDAO.countByRestauranteIdAndFechaAndTurnoAndEstadoNot(
+                dto.getRestauranteId(), dto.getFecha(), dto.getTurno(), EstadoReserva.CANCELADA);
+
+        if (reservasActuales >= aforoMaximo) {
+            throw new RuntimeException("Aforo máximo alcanzado para el turno " + dto.getTurno());
         }
 
         Usuario cliente = usuarioDAO.findById(dto.getClienteId())
@@ -43,8 +49,9 @@ public class ReservaService {
 
         Reserva reserva = new Reserva();
         reserva.setFecha(dto.getFecha());
-        reserva.setHora(dto.getHora());
+        reserva.setTurno(dto.getTurno());
         reserva.setNumComensales(dto.getNumComensales());
+        reserva.setObservaciones(dto.getObservaciones());
         reserva.setCliente(cliente);
         reserva.setRestaurante(restaurante);
         reserva.setEstado(EstadoReserva.CONFIRMADA);
@@ -66,6 +73,15 @@ public class ReservaService {
         return toDTO(reservaDAO.save(reserva));
     }
 
+    public ReservaResponseDTO asignarCamarero(Long reservaId, Long camareroId) {
+        Reserva reserva = reservaDAO.findById(reservaId)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+        Usuario camarero = usuarioDAO.findById(camareroId)
+                .orElseThrow(() -> new RuntimeException("Camarero no encontrado"));
+        reserva.setCamarero(camarero);
+        return toDTO(reservaDAO.save(reserva));
+    }
+
     public List<ReservaResponseDTO> obtenerPorRestaurante(Long restauranteId) {
         return reservaDAO.findByRestauranteId(restauranteId)
                 .stream().map(this::toDTO).collect(Collectors.toList());
@@ -81,12 +97,18 @@ public class ReservaService {
                 .stream().map(this::toDTO).collect(Collectors.toList());
     }
 
+    public List<ReservaResponseDTO> obtenerPorRestauranteYTurno(Long restauranteId, LocalDate fecha, Turno turno) {
+        return reservaDAO.findByRestauranteIdAndFechaAndTurno(restauranteId, fecha, turno)
+                .stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
     private ReservaResponseDTO toDTO(Reserva r) {
         ReservaResponseDTO dto = new ReservaResponseDTO();
         dto.setId(r.getId());
         dto.setFecha(r.getFecha());
-        dto.setHora(r.getHora());
+        dto.setTurno(r.getTurno());
         dto.setNumComensales(r.getNumComensales());
+        dto.setObservaciones(r.getObservaciones());
         dto.setEstado(r.getEstado());
         dto.setNombreCliente(r.getCliente().getNombre());
         dto.setNombreRestaurante(r.getRestaurante().getNombre());

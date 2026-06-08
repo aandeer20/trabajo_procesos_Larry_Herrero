@@ -3,7 +3,6 @@ package com.deustoRestaurant.DRestaurant.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate;
-import java.time.LocalTime;
 
 @Entity
 @Data
@@ -15,8 +14,12 @@ public class Reserva {
     private Long id;
 
     private LocalDate fecha;
-    private LocalTime hora;
+
+    @Enumerated(EnumType.STRING)
+    private Turno turno;
+
     private int numComensales;
+    private String observaciones;
 
     @Enumerated(EnumType.STRING)
     private EstadoReserva estado = EstadoReserva.PENDIENTE;
@@ -33,67 +36,75 @@ public class Reserva {
     @JoinColumn(name = "camarero_id")
     private Usuario camarero;
 
-	public Long getId() {
-		return id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public LocalDate getFecha() {
-		return fecha;
-	}
+    public LocalDate getFecha() {
+        return fecha;
+    }
 
-	public void setFecha(LocalDate fecha) {
-		this.fecha = fecha;
-	}
+    public void setFecha(LocalDate fecha) {
+        this.fecha = fecha;
+    }
 
-	public LocalTime getHora() {
-		return hora;
-	}
+    public Turno getTurno() {
+        return turno;
+    }
 
-	public void setHora(LocalTime hora) {
-		this.hora = hora;
-	}
+    public void setTurno(Turno turno) {
+        this.turno = turno;
+    }
 
-	public int getNumComensales() {
-		return numComensales;
-	}
+    public int getNumComensales() {
+        return numComensales;
+    }
 
-	public void setNumComensales(int numComensales) {
-		this.numComensales = numComensales;
-	}
+    public void setNumComensales(int numComensales) {
+        this.numComensales = numComensales;
+    }
 
-	public EstadoReserva getEstado() {
-		return estado;
-	}
+    public String getObservaciones() {
+        return observaciones;
+    }
 
-	public void setEstado(EstadoReserva estado) {
-		this.estado = estado;
-	}
+    public void setObservaciones(String observaciones) {
+        this.observaciones = observaciones;
+    }
 
-	public Usuario getCliente() {
-		return cliente;
-	}
+    public EstadoReserva getEstado() {
+        return estado;
+    }
 
-	public void setCliente(Usuario cliente) {
-		this.cliente = cliente;
-	}
+    public void setEstado(EstadoReserva estado) {
+        this.estado = estado;
+    }
 
-	public Restaurante getRestaurante() {
-		return restaurante;
-	}
+    public Usuario getCliente() {
+        return cliente;
+    }
 
-	public void setRestaurante(Restaurante restaurante) {
-		this.restaurante = restaurante;
-	}
+    public void setCliente(Usuario cliente) {
+        this.cliente = cliente;
+    }
 
-	public Usuario getCamarero() {
-		return camarero;
-	}
+    public Restaurante getRestaurante() {
+        return restaurante;
+    }
 
-	public void setCamarero(Usuario camarero) {
-		this.camarero = camarero;
-	}
+    public void setRestaurante(Restaurante restaurante) {
+        this.restaurante = restaurante;
+    }
+
+    public Usuario getCamarero() {
+        return camarero;
+    }
+
+    public void setCamarero(Usuario camarero) {
+        this.camarero = camarero;
+    }
 }
