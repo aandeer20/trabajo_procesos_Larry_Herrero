@@ -20,6 +20,6 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // Sirve los ficheros del frontend desde la carpeta /frontend/ del proyecto
         registry.addResourceHandler("/**")
-                .addResourceLocations("file:frontend/");
+                .addResourceLocations("classpath:/static/");
     }
 }
