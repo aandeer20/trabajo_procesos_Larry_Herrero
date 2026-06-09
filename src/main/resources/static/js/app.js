@@ -1,74 +1,39 @@
 const API_BASE = '/api';
 
-function abrirModal(tipo) {
-    document.getElementById('modal-' + tipo).classList.add('active');
+// Redirige si ya hay sesión activa
+const usuarioGuardado = sessionStorage.getItem('usuario');
+if (usuarioGuardado && window.location.pathname.includes('login')) {
+    window.location.href = 'dashboard.html';
 }
-
-function cerrarModal(tipo) {
-    document.getElementById('modal-' + tipo).classList.remove('active');
-}
-
-function cambiarModal(desde, hacia) {
-    cerrarModal(desde);
-    abrirModal(hacia);
-}
-
-// Cerrar modal al hacer clic fuera
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-    overlay.addEventListener('click', function(e) {
-        if (e.target === this) {
-            this.classList.remove('active');
-        }
-    });
-});
 
 async function submitLogin(e) {
     e.preventDefault();
-    const email = document.getElementById('login-email').value;
+    const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
     const errorEl = document.getElementById('login-error');
-    errorEl.style.display = 'none';
+    errorEl.textContent = '';
 
     try {
         const res = await fetch(`${API_BASE}/usuarios/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`, {
             method: 'POST'
         });
-        if (!res.ok) throw new Error();
+        if (res.status === 400 || res.status === 404) {
+            errorEl.textContent = 'Credenciales incorrectas. Inténtalo de nuevo.';
+            return;
+        }
+        if (!res.ok) {
+            errorEl.textContent = 'Error del servidor. Inténtalo más tarde.';
+            return;
+        }
         const usuario = await res.json();
         sessionStorage.setItem('usuario', JSON.stringify(usuario));
-        cerrarModal('login');
-        alert(`¡Bienvenido, ${usuario.nombre}!`);
+        window.location.href = 'dashboard.html';
     } catch {
-        errorEl.style.display = 'block';
+        errorEl.textContent = 'No se pudo conectar con el servidor.';
     }
 }
 
-async function submitRegistro(e) {
-    e.preventDefault();
-    const errorEl = document.getElementById('reg-error');
-    errorEl.style.display = 'none';
-
-    const body = {
-        nombre: document.getElementById('reg-nombre').value,
-        apellidos: document.getElementById('reg-apellidos').value,
-        email: document.getElementById('reg-email').value,
-        telefono: document.getElementById('reg-telefono').value,
-        password: document.getElementById('reg-password').value,
-        rol: 'CLIENTE'
-    };
-
-    try {
-        const res = await fetch(`${API_BASE}/usuarios`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        if (!res.ok) throw new Error();
-        const usuario = await res.json();
-        sessionStorage.setItem('usuario', JSON.stringify(usuario));
-        cerrarModal('registro');
-        alert(`¡Cuenta creada, ${usuario.nombre}! Ya puedes reservar tu mesa.`);
-    } catch {
-        errorEl.style.display = 'block';
-    }
+function cerrarSesion() {
+    sessionStorage.removeItem('usuario');
+    window.location.href = 'login.html';
 }

@@ -5,6 +5,7 @@ import com.deustoRestaurant.DRestaurant.dto.UsuarioResponseDTO;
 import com.deustoRestaurant.DRestaurant.entity.Rol;
 import com.deustoRestaurant.DRestaurant.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -21,8 +22,12 @@ public class UsuarioFacade {
     }
 
     @PostMapping("/login")
-    public UsuarioResponseDTO login(@RequestParam String email, @RequestParam String password) {
-        return usuarioService.login(email, password);
+    public ResponseEntity<UsuarioResponseDTO> login(@RequestParam String email, @RequestParam String password) {
+        try {
+            return ResponseEntity.ok(usuarioService.login(email, password));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).build();
+        }
     }
 
     @GetMapping("/rol/{rol}")
