@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Gerente — DeustoRestaurant</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <style>
+        .turno-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .turno-tab {
+            padding: 10px 28px;
+            border-radius: 4px;
+            border: 2px solid #c9a84c;
+            background: transparent;
+            color: #c9a84c;
+            font-family: 'Georgia', serif;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .turno-tab.active {
+            background: #c9a84c;
+            color: #1a1a1a;
+            font-weight: bold;
+        }
+
+        .seccion {
+            margin-bottom: 48px;
+        }
+
+        .seccion h2 {
+            font-size: 1.3rem;
+            color: #1a1a1a;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #c9a84c;
+            padding-bottom: 8px;
+        }
+
+        .disponibilidad-card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 28px 32px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .disponibilidad-numero {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #c9a84c;
+        }
+
+        .disponibilidad-texto {
+            font-size: 1rem;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .disponibilidad-texto strong {
+            color: #1a1a1a;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+        }
+
+        thead {
+            background-color: #1a1a1a;
+            color: #c9a84c;
+        }
+
+        thead th {
+            padding: 14px 20px;
+            text-align: left;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f0ece4;
+            transition: background 0.15s;
+        }
+
+        tbody tr:hover {
+            background-color: #faf8f5;
+        }
+
+        tbody td {
+            padding: 14px 20px;
+            font-size: 0.92rem;
+            color: #333;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: bold;
+        }
+
+        .badge-confirmada { background: #e8f5e9; color: #2e7d32; }
+        .badge-pendiente  { background: #fff8e1; color: #f57f17; }
+        .badge-completada { background: #e3f2fd; color: #1565c0; }
+        .badge-cancelada  { background: #fce4ec; color: #c62828; }
+        .badge-no_show    { background: #f3e5f5; color: #6a1b9a; }
+        .badge-activo     { background: #e8f5e9; color: #2e7d32; }
+        .badge-inactivo   { background: #fce4ec; color: #c62828; }
+
+        .empty-msg {
+            text-align: center;
+            color: #aaa;
+            padding: 32px;
+            font-size: 0.95rem;
+        }
+
+        .fecha-selector {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .fecha-selector label {
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .fecha-selector input {
+            padding: 8px 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Georgia', serif;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .fecha-selector input:focus {
+            border-color: #c9a84c;
+        }
+
+        .btn-buscar {
+            padding: 8px 20px;
+            background: #c9a84c;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 4px;
+            font-family: 'Georgia', serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-buscar:hover {
+            background: #b8973b;
+        }
+
+        .btn-desactivar {
+            padding: 6px 14px;
+            background: transparent;
+            border: 1px solid #c62828;
+            color: #c62828;
+            border-radius: 4px;
+            font-family: 'Georgia', serif;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-desactivar:hover {
+            background: #c62828;
+            color: #fff;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 20px 28px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            text-align: center;
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .stat-card .stat-numero {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #c9a84c;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a class="nav-logo" href="index.html">Deusto<span>Restaurant</span></a>
+        <div class="dashboard-nav-user">
+            <span id="nav-nombre"></span>
+            <button class="btn-logout" onclick="cerrarSesion()">Cerrar sesión</button>
+        </div>
+    </nav>
+
+    <main class="dashboard-main">
+        <h1>Panel <span>Gerente</span></h1>
+        <p class="subtitle" id="subtitulo"></p>
+
+        <!-- Stats rápidas -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-numero" id="stat-plazas">—</div>
+                <div class="stat-label">Plazas libres hoy</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-numero" id="stat-reservas">—</div>
+                <div class="stat-label">Reservas hoy</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-numero" id="stat-camareros">—</div>
+                <div class="stat-label">Camareros activos</div>
+            </div>
+        </div>
+
+        <!-- Disponibilidad -->
+        <div class="seccion">
+            <h2>Plazas disponibles</h2>
+
+            <div class="fecha-selector">
+                <label>Fecha:</label>
+                <input type="date" id="fecha-selector">
+                <button class="btn-buscar" onclick="cargarReservas()">Buscar</button>
+            </div>
+
+            <div class="turno-tabs">
+                <button class="turno-tab active" id="tab-comida" onclick="cambiarTurno('COMIDA')">🍽 Comida</button>
+                <button class="turno-tab" id="tab-cena" onclick="cambiarTurno('CENA')">🌙 Cena</button>
+            </div>
+
+            <div class="disponibilidad-card">
+                <div class="disponibilidad-numero" id="plazas-libres">—</div>
+                <div class="disponibilidad-texto">
+                    plazas libres de <strong id="aforo-total">—</strong> para el turno de
+                    <strong id="turno-nombre">Comida</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reservas del día -->
+        <div class="seccion">
+            <h2>Reservas del día</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Hora</th>
+                        <th>Comensales</th>
+                        <th>Camarero</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-reservas">
+                    <tr><td colspan="5" class="empty-msg">Selecciona una fecha para ver las reservas.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Lista de camareros -->
+        <div class="seccion">
+            <h2>Camareros</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Estado</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-camareros">
+                    <tr><td colspan="4" class="empty-msg">Cargando camareros...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script>
+        const usuario = JSON.parse(sessionStorage.getItem('usuario'));
+        if (!usuario || usuario.rol !== 'GERENTE') {
+            window.location.href = 'login.html';
+        }
+
+        document.getElementById('nav-nombre').textContent = usuario.nombre + ' ' + (usuario.apellidos || '');
+        document.getElementById('subtitulo').textContent = 'Panel de gerente — ' + (usuario.nombreRestaurante || '');
+
+        const hoy = new Date().toISOString().split('T')[0];
+        document.getElementById('fecha-selector').value = hoy;
+
+        let turnoActual = 'COMIDA';
+        let aforoRestaurante = 0;
+        let restauranteId = null;
+        let reservasDelDia = [];
+
+        const horasComida = ['13:00', '13:30', '14:00', '14:30', '15:00', '15:30'];
+        const horasCena   = ['20:00', '20:30', '21:00', '21:30', '22:00', '22:30'];
+
+        function cambiarTurno(turno) {
+            turnoActual = turno;
+            document.getElementById('tab-comida').classList.toggle('active', turno === 'COMIDA');
+            document.getElementById('tab-cena').classList.toggle('active', turno === 'CENA');
+            document.getElementById('turno-nombre').textContent = turno === 'COMIDA' ? 'Comida' : 'Cena';
+            renderTablaReservas();
+            calcularPlazas();
+        }
+
+        async function cargarTodo() {
+            try {
+                const resRest = await fetch(`${API_BASE}/restaurantes`);
+                const restaurantes = await resRest.json();
+                if (restaurantes.length > 0) {
+                    aforoRestaurante = restaurantes[0].aforoMaximo;
+                    restauranteId = restaurantes[0].id;
+                    document.getElementById('aforo-total').textContent = aforoRestaurante;
+                }
+                await cargarReservas();
+                await cargarCamareros();
+            } catch (e) {
+                console.error('Error cargando datos:', e);
+            }
+        }
+
+        async function cargarReservas() {
+            if (!restauranteId) return;
+            const fecha = document.getElementById('fecha-selector').value;
+            try {
+                const res = await fetch(`${API_BASE}/reservas/restaurante/${restauranteId}`);
+                const todasReservas = await res.json();
+                reservasDelDia = todasReservas.filter(r => r.fecha === fecha);
+
+                // Stats
+                const activas = reservasDelDia.filter(r => r.estado !== 'CANCELADA');
+                document.getElementById('stat-reservas').textContent = activas.length;
+
+                renderTablaReservas();
+                calcularPlazas();
+            } catch (e) {
+                console.error('Error cargando reservas:', e);
+            }
+        }
+
+        function renderTablaReservas() {
+            const horas = turnoActual === 'COMIDA' ? horasComida : horasCena;
+            const reservasFiltradas = reservasDelDia.filter(r => {
+                const hora = r.hora.substring(0, 5);
+                return horas.includes(hora);
+            });
+
+            const tbody = document.getElementById('tabla-reservas');
+            if (reservasFiltradas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">No hay reservas para este turno.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = reservasFiltradas.map(r => `
+                <tr>
+                    <td>${r.nombreCliente}</td>
+                    <td>${r.hora.substring(0, 5)}</td>
+                    <td>${r.numComensales} personas</td>
+                    <td>${r.nombreCamarero || '<span style="color:#aaa">Sin asignar</span>'}</td>
+                    <td><span class="badge badge-${r.estado.toLowerCase()}">${r.estado}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function calcularPlazas() {
+            const horas = turnoActual === 'COMIDA' ? horasComida : horasCena;
+            const reservasDelTurno = reservasDelDia.filter(r => {
+                const hora = r.hora.substring(0, 5);
+                return horas.includes(hora) && r.estado !== 'CANCELADA';
+            });
+            const ocupadas = reservasDelTurno.reduce((acc, r) => acc + r.numComensales, 0);
+            const libres = Math.max(0, aforoRestaurante - ocupadas);
+            document.getElementById('plazas-libres').textContent = libres;
+            document.getElementById('stat-plazas').textContent = libres;
+        }
+
+        async function cargarCamareros() {
+            try {
+                const res = await fetch(`${API_BASE}/usuarios/rol/CAMARERO`);
+                const camareros = await res.json();
+
+                const activos = camareros.filter(c => c.activo);
+                document.getElementById('stat-camareros').textContent = activos.length;
+
+                const tbody = document.getElementById('tabla-camareros');
+                if (camareros.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">No hay camareros registrados.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = camareros.map(c => `
+                    <tr>
+                        <td>${c.nombre} ${c.apellidos || ''}</td>
+                        <td>${c.email}</td>
+                        <td><span class="badge badge-${c.activo ? 'activo' : 'inactivo'}">${c.activo ? 'Activo' : 'Inactivo'}</span></td>
+                        <td>
+                            ${c.activo
+                                ? `<button class="btn-desactivar" onclick="desactivarCamarero(${c.id})">Desactivar</button>`
+                                : ''}
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error('Error cargando camareros:', e);
+            }
+        }
+
+        async function desactivarCamarero(id) {
+            if (!confirm('¿Seguro que quieres desactivar este camarero?')) return;
+            try {
+                await fetch(`${API_BASE}/usuarios/${id}`, { method: 'DELETE' });
+                cargarCamareros();
+            } catch (e) {
+                console.error('Error desactivando camarero:', e);
+            }
+        }
+
+        cargarTodo();
+    </script>
+</body>
+</html>
