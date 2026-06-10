@@ -1,7 +1,7 @@
 // Redirige si ya hay sesión activa
 const usuarioGuardado = sessionStorage.getItem('usuario');
 if (usuarioGuardado) {
-    window.location.href = 'dashboard.html';
+    window.location.href = 'dashboard-cliente.html';
 }
 
 async function submitRegistro(e) {
@@ -44,7 +44,7 @@ async function submitRegistro(e) {
 
         const usuario = await res.json();
         sessionStorage.setItem('usuario', JSON.stringify(usuario));
-        window.location.href = 'dashboard.html';
+        window.location.href = 'dashboard-cliente.html';
 
     } catch {
         errorEl.textContent = 'No se pudo conectar con el servidor.';

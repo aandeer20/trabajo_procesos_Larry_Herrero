@@ -3,191 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Cliente — DeustoRestaurant</title>
+    <title>Mi Panel — DeustoRestaurant</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/auth.css">
     <style>
-        .turno-tabs {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 32px;
+        .tabs { display:flex; gap:8px; margin-bottom:36px; border-bottom:2px solid #e8e3da; }
+        .tab-btn {
+            padding:12px 28px; background:transparent; border:none; border-bottom:3px solid transparent;
+            font-family:'Georgia',serif; font-size:1rem; color:#888; cursor:pointer; transition:all 0.2s; margin-bottom:-2px;
         }
-
-        .turno-tab {
-            padding: 10px 28px;
-            border-radius: 4px;
-            border: 2px solid #c9a84c;
-            background: transparent;
-            color: #c9a84c;
-            font-family: 'Georgia', serif;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.2s;
+        .tab-btn.active { color:#1a1a1a; border-bottom-color:#c9a84c; font-weight:bold; }
+        .tab-btn:hover:not(.active) { color:#555; }
+        .tab-panel { display:none; }
+        .tab-panel.active { display:block; }
+        .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+        .form-group { display:flex; flex-direction:column; gap:6px; }
+        .form-group.full { grid-column:1/-1; }
+        .form-group label { font-size:0.85rem; color:#555; font-weight:bold; }
+        .form-group input, .form-group select, .form-group textarea {
+            padding:10px 14px; border:1px solid #ddd; border-radius:4px;
+            font-family:'Georgia',serif; font-size:0.95rem; outline:none; transition:border-color 0.2s;
         }
-
-        .turno-tab.active {
-            background: #c9a84c;
-            color: #1a1a1a;
-            font-weight: bold;
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:#c9a84c; }
+        .form-group textarea { resize:vertical; min-height:80px; }
+        .btn-submit {
+            padding:12px 32px; background:#c9a84c; color:#1a1a1a; border:none; border-radius:4px;
+            font-family:'Georgia',serif; font-size:1rem; font-weight:bold; cursor:pointer; transition:background 0.2s;
         }
-
-        .seccion {
-            margin-bottom: 48px;
-        }
-
-        .seccion h2 {
-            font-size: 1.3rem;
-            color: #1a1a1a;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #c9a84c;
-            padding-bottom: 8px;
-        }
-
-        .disponibilidad-card {
-            background: #ffffff;
-            border-radius: 8px;
-            padding: 28px 32px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-            display: flex;
-            align-items: center;
-            gap: 24px;
-        }
-
-        .disponibilidad-numero {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #c9a84c;
-        }
-
-        .disponibilidad-texto {
-            font-size: 1rem;
-            color: #555;
-            line-height: 1.6;
-        }
-
-        .disponibilidad-texto strong {
-            color: #1a1a1a;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #ffffff;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-        }
-
-        thead {
-            background-color: #1a1a1a;
-            color: #c9a84c;
-        }
-
-        thead th {
-            padding: 14px 20px;
-            text-align: left;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
-        }
-
-        tbody tr {
-            border-bottom: 1px solid #f0ece4;
-            transition: background 0.15s;
-        }
-
-        tbody tr:hover {
-            background-color: #faf8f5;
-        }
-
-        tbody td {
-            padding: 14px 20px;
-            font-size: 0.92rem;
-            color: #333;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.78rem;
-            font-weight: bold;
-        }
-
-        .badge-confirmada { background: #e8f5e9; color: #2e7d32; }
-        .badge-pendiente  { background: #fff8e1; color: #f57f17; }
-        .badge-completada { background: #e3f2fd; color: #1565c0; }
-        .badge-cancelada  { background: #fce4ec; color: #c62828; }
-        .badge-no_show    { background: #f3e5f5; color: #6a1b9a; }
-
-        .empty-msg {
-            text-align: center;
-            color: #aaa;
-            padding: 32px;
-            font-size: 0.95rem;
-        }
-
-        .fecha-selector {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 28px;
-        }
-
-        .fecha-selector label {
-            font-size: 0.9rem;
-            color: #555;
-        }
-
-        .fecha-selector input {
-            padding: 8px 14px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: 'Georgia', serif;
-            font-size: 0.9rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .fecha-selector input:focus {
-            border-color: #c9a84c;
-        }
-
-        .btn-buscar {
-            padding: 8px 20px;
-            background: #c9a84c;
-            color: #1a1a1a;
-            border: none;
-            border-radius: 4px;
-            font-family: 'Georgia', serif;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-buscar:hover {
-            background: #b8973b;
-        }
-
+        .btn-submit:hover { background:#b8973b; }
+        .form-card { background:#fff; border-radius:8px; padding:36px; box-shadow:0 2px 12px rgba(0,0,0,0.07); max-width:620px; }
+        .success-msg { color:#2e7d32; font-size:0.9rem; margin-top:10px; display:block; }
+        .error-msg   { color:#c0392b; font-size:0.9rem; margin-top:10px; display:block; }
+        table { width:100%; border-collapse:collapse; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.07); }
+        thead { background:#1a1a1a; color:#c9a84c; }
+        thead th { padding:14px 20px; text-align:left; font-size:0.85rem; letter-spacing:0.5px; }
+        tbody tr { border-bottom:1px solid #f0ece4; transition:background 0.15s; }
+        tbody tr:hover { background:#faf8f5; }
+        tbody td { padding:14px 20px; font-size:0.92rem; color:#333; }
+        .empty-msg { text-align:center; color:#aaa; padding:32px; font-size:0.95rem; }
+        .badge { display:inline-block; padding:4px 12px; border-radius:20px; font-size:0.78rem; font-weight:bold; }
+        .badge-confirmada { background:#e8f5e9; color:#2e7d32; }
+        .badge-pendiente  { background:#fff8e1; color:#f57f17; }
+        .badge-completada { background:#e3f2fd; color:#1565c0; }
+        .badge-cancelada  { background:#fce4ec; color:#c62828; }
+        .badge-no_show    { background:#f3e5f5; color:#6a1b9a; }
         .btn-cancelar {
-            padding: 6px 14px;
-            background: transparent;
-            border: 1px solid #c62828;
-            color: #c62828;
-            border-radius: 4px;
-            font-family: 'Georgia', serif;
-            font-size: 0.82rem;
-            cursor: pointer;
-            transition: all 0.2s;
+            padding:6px 14px; background:transparent; border:1px solid #c62828; color:#c62828;
+            border-radius:4px; font-family:'Georgia',serif; font-size:0.82rem; cursor:pointer; transition:all 0.2s;
         }
-
-        .btn-cancelar:hover {
-            background: #c62828;
-            color: #fff;
-        }
+        .btn-cancelar:hover { background:#c62828; color:#fff; }
+        .seccion-titulo { font-size:1.3rem; color:#1a1a1a; margin-bottom:24px; border-bottom:2px solid #c9a84c; padding-bottom:8px; }
     </style>
 </head>
 <body>
-
     <nav>
         <a class="nav-logo" href="index.html">Deusto<span>Restaurant</span></a>
         <div class="dashboard-nav-user">
@@ -195,50 +63,58 @@
             <button class="btn-logout" onclick="cerrarSesion()">Cerrar sesión</button>
         </div>
     </nav>
-
     <main class="dashboard-main">
         <h1>Hola, <span id="bienvenida-nombre"></span></h1>
         <p class="subtitle">¿Qué quieres hacer hoy?</p>
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="crear" onclick="cambiarTab('crear')">🍽 Crear reserva</button>
+            <button class="tab-btn" data-tab="mis-reservas" onclick="cambiarTab('mis-reservas')">📋 Mis reservas</button>
+        </div>
 
-        <!-- Disponibilidad -->
-        <div class="seccion">
-            <h2>Plazas disponibles</h2>
-
-            <div class="fecha-selector">
-                <label>Fecha:</label>
-                <input type="date" id="fecha-selector">
-                <button class="btn-buscar" onclick="cargarDisponibilidad()">Ver disponibilidad</button>
-            </div>
-
-            <div class="turno-tabs">
-                <button class="turno-tab active" id="tab-comida" onclick="cambiarTurno('COMIDA')">🍽 Comida</button>
-                <button class="turno-tab" id="tab-cena" onclick="cambiarTurno('CENA')">🌙 Cena</button>
-            </div>
-
-            <div class="disponibilidad-card">
-                <div class="disponibilidad-numero" id="plazas-libres">—</div>
-                <div class="disponibilidad-texto">
-                    plazas libres de <strong id="aforo-total">—</strong> para el turno de
-                    <strong id="turno-nombre">Comida</strong>
-                </div>
+        <!-- CREAR RESERVA -->
+        <div class="tab-panel active" id="tab-crear">
+            <div class="form-card">
+                <h2 class="seccion-titulo">Nueva reserva</h2>
+                <form id="form-reserva" onsubmit="crearReserva(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Fecha</label>
+                            <input type="date" id="res-fecha" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Turno</label>
+                            <select id="res-turno" required>
+                                <option value="">— Selecciona —</option>
+                                <option value="COMIDA">🍽 Comida (13:00 – 16:00)</option>
+                                <option value="CENA">🌙 Cena (20:00 – 23:00)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Número de comensales</label>
+                            <input type="number" id="res-comensales" min="1" max="20" placeholder="Ej: 2" required>
+                        </div>
+                        <div class="form-group full">
+                            <label>Observaciones (opcional)</label>
+                            <textarea id="res-obs" placeholder="Alergias, silla para bebé, ocasión especial..."></textarea>
+                        </div>
+                    </div>
+                    <br>
+                    <button type="submit" class="btn-submit">Reservar mesa</button>
+                    <span class="error-msg" id="res-error"></span>
+                    <span class="success-msg" id="res-ok"></span>
+                </form>
             </div>
         </div>
 
-        <!-- Mis reservas -->
-        <div class="seccion">
-            <h2>Mis reservas</h2>
+        <!-- MIS RESERVAS -->
+        <div class="tab-panel" id="tab-mis-reservas">
+            <h2 class="seccion-titulo">Mis reservas</h2>
             <table>
                 <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Hora</th>
-                        <th>Comensales</th>
-                        <th>Estado</th>
-                        <th></th>
-                    </tr>
+                    <tr><th>Fecha</th><th>Turno</th><th>Comensales</th><th>Estado</th><th></th></tr>
                 </thead>
-                <tbody id="tabla-mis-reservas">
-                    <tr><td colspan="5" class="empty-msg">Cargando reservas...</td></tr>
+                <tbody id="tabla-reservas">
+                    <tr><td colspan="5" class="empty-msg">Cargando...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -247,103 +123,79 @@
     <script src="js/app.js"></script>
     <script>
         const usuario = JSON.parse(sessionStorage.getItem('usuario'));
-        if (!usuario || usuario.rol !== 'CLIENTE') {
-            window.location.href = 'login.html';
-        }
+        if (!usuario || usuario.rol !== 'CLIENTE') window.location.href = 'login.html';
 
         document.getElementById('nav-nombre').textContent = usuario.nombre + ' ' + (usuario.apellidos || '');
         document.getElementById('bienvenida-nombre').textContent = usuario.nombre;
+        document.getElementById('res-fecha').min = new Date().toISOString().split('T')[0];
 
-        const hoy = new Date().toISOString().split('T')[0];
-        document.getElementById('fecha-selector').value = hoy;
-
-        let turnoActual = 'COMIDA';
-        let aforoRestaurante = 0;
-        let reservasDelDia = [];
-
-        const horasComida = ['13:00', '13:30', '14:00', '14:30', '15:00', '15:30'];
-        const horasCena   = ['20:00', '20:30', '21:00', '21:30', '22:00', '22:30'];
-
-        function cambiarTurno(turno) {
-            turnoActual = turno;
-            document.getElementById('tab-comida').classList.toggle('active', turno === 'COMIDA');
-            document.getElementById('tab-cena').classList.toggle('active', turno === 'CENA');
-            document.getElementById('turno-nombre').textContent = turno === 'COMIDA' ? 'Comida' : 'Cena';
-            calcularPlazas();
+        function cambiarTab(nombre) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === nombre));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + nombre));
+            if (nombre === 'mis-reservas') cargarMisReservas();
         }
 
-        async function cargarDisponibilidad() {
-            const fecha = document.getElementById('fecha-selector').value;
-            if (!fecha) return;
+        async function crearReserva(e) {
+            e.preventDefault();
+            const errorEl = document.getElementById('res-error');
+            const okEl    = document.getElementById('res-ok');
+            errorEl.textContent = ''; okEl.textContent = '';
+
+            let restauranteId;
+            try {
+                const r = await fetch(`${API_BASE}/restaurantes/activos`);
+                const lista = await r.json();
+                if (!lista.length) { errorEl.textContent = 'No hay restaurantes disponibles.'; return; }
+                restauranteId = lista[0].id;
+            } catch { errorEl.textContent = 'Error al conectar con el servidor.'; return; }
+
+            const body = {
+                fecha: document.getElementById('res-fecha').value,
+                turno: document.getElementById('res-turno').value,
+                numComensales: parseInt(document.getElementById('res-comensales').value),
+                observaciones: document.getElementById('res-obs').value.trim(),
+                clienteId: usuario.id,
+                restauranteId
+            };
 
             try {
-                const resRest = await fetch(`${API_BASE}/restaurantes`);
-                const restaurantes = await resRest.json();
-                aforoRestaurante = restaurantes.length > 0 ? restaurantes[0].aforoMaximo : 20;
-                document.getElementById('aforo-total').textContent = aforoRestaurante;
-
-                const resReservas = await fetch(`${API_BASE}/reservas/restaurante/${restaurantes[0].id}`);
-                reservasDelDia = await resReservas.json();
-                reservasDelDia = reservasDelDia.filter(r => r.fecha === fecha);
-
-                calcularPlazas();
-            } catch (e) {
-                console.error('Error cargando disponibilidad:', e);
-            }
-        }
-
-        function calcularPlazas() {
-            const horas = turnoActual === 'COMIDA' ? horasComida : horasCena;
-            const reservasDelTurno = reservasDelDia.filter(r => {
-                const hora = r.hora.substring(0, 5);
-                return horas.includes(hora) && r.estado !== 'CANCELADA';
-            });
-            const ocupadas = reservasDelTurno.reduce((acc, r) => acc + r.numComensales, 0);
-            const libres = Math.max(0, aforoRestaurante - ocupadas);
-            document.getElementById('plazas-libres').textContent = libres;
+                const res = await fetch(`${API_BASE}/reservas`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+                });
+                if (res.status === 400) { errorEl.textContent = 'No quedan plazas disponibles para ese turno.'; return; }
+                if (!res.ok) { errorEl.textContent = 'Error del servidor.'; return; }
+                okEl.textContent = '¡Reserva creada con éxito!';
+                document.getElementById('form-reserva').reset();
+                document.getElementById('res-fecha').min = new Date().toISOString().split('T')[0];
+            } catch { errorEl.textContent = 'No se pudo conectar con el servidor.'; }
         }
 
         async function cargarMisReservas() {
+            const tbody = document.getElementById('tabla-reservas');
+            tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Cargando...</td></tr>';
             try {
                 const res = await fetch(`${API_BASE}/reservas/cliente/${usuario.id}`);
                 const reservas = await res.json();
-
-                const tbody = document.getElementById('tabla-mis-reservas');
-                if (reservas.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">No tienes reservas aún.</td></tr>';
-                    return;
-                }
-
+                if (!reservas.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">No tienes reservas aún.</td></tr>'; return; }
                 tbody.innerHTML = reservas.map(r => `
                     <tr>
                         <td>${r.fecha}</td>
-                        <td>${r.hora.substring(0, 5)}</td>
+                        <td>${r.turno === 'COMIDA' ? '🍽 Comida' : '🌙 Cena'}</td>
                         <td>${r.numComensales} personas</td>
                         <td><span class="badge badge-${r.estado.toLowerCase()}">${r.estado}</span></td>
-                        <td>
-                            ${r.estado === 'CONFIRMADA' || r.estado === 'PENDIENTE'
-                                ? `<button class="btn-cancelar" onclick="cancelarReserva(${r.id})">Cancelar</button>`
-                                : ''}
-                        </td>
-                    </tr>
-                `).join('');
-            } catch (e) {
-                console.error('Error cargando reservas:', e);
-            }
+                        <td>${(r.estado === 'PENDIENTE' || r.estado === 'CONFIRMADA')
+                            ? `<button class="btn-cancelar" onclick="cancelar(${r.id})">Cancelar</button>` : ''}</td>
+                    </tr>`).join('');
+            } catch { tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Error al cargar.</td></tr>'; }
         }
 
-        async function cancelarReserva(id) {
+        async function cancelar(id) {
             if (!confirm('¿Seguro que quieres cancelar esta reserva?')) return;
-            try {
-                await fetch(`${API_BASE}/reservas/${id}/cancelar`, { method: 'PUT' });
-                cargarMisReservas();
-            } catch (e) {
-                console.error('Error cancelando reserva:', e);
-            }
+            await fetch(`${API_BASE}/reservas/${id}/cancelar`, { method: 'PUT' });
+            cargarMisReservas();
         }
 
-        cargarDisponibilidad();
-        cargarMisReservas();
+        function cerrarSesion() { sessionStorage.removeItem('usuario'); window.location.href = 'login.html'; }
     </script>
 </body>
 </html>
