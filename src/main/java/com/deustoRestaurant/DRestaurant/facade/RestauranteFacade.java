@@ -1,9 +1,12 @@
 package com.deustoRestaurant.DRestaurant.facade;
 
+import com.deustoRestaurant.DRestaurant.dto.AforoRequestDTO;
 import com.deustoRestaurant.DRestaurant.dto.RestauranteRequestDTO;
 import com.deustoRestaurant.DRestaurant.dto.RestauranteResponseDTO;
 import com.deustoRestaurant.DRestaurant.service.RestauranteService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -15,8 +18,8 @@ public class RestauranteFacade {
     private RestauranteService restauranteService;
 
     @PostMapping
-    public RestauranteResponseDTO crear(@RequestBody RestauranteRequestDTO dto) {
-        return restauranteService.crear(dto);
+    public ResponseEntity<RestauranteResponseDTO> crear(@RequestBody RestauranteRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(restauranteService.crear(dto));
     }
 
     @PutMapping("/{id}")
@@ -25,13 +28,13 @@ public class RestauranteFacade {
     }
 
     @PutMapping("/{id}/aforo/comida")
-    public RestauranteResponseDTO actualizarAforoComida(@PathVariable Long id, @RequestParam int aforo) {
-        return restauranteService.actualizarAforoComida(id, aforo);
+    public RestauranteResponseDTO actualizarAforoComida(@PathVariable Long id, @RequestBody AforoRequestDTO dto) {
+        return restauranteService.actualizarAforoComida(id, dto.getAforo());
     }
 
     @PutMapping("/{id}/aforo/cena")
-    public RestauranteResponseDTO actualizarAforoCena(@PathVariable Long id, @RequestParam int aforo) {
-        return restauranteService.actualizarAforoCena(id, aforo);
+    public RestauranteResponseDTO actualizarAforoCena(@PathVariable Long id, @RequestBody AforoRequestDTO dto) {
+        return restauranteService.actualizarAforoCena(id, dto.getAforo());
     }
 
     @DeleteMapping("/{id}")

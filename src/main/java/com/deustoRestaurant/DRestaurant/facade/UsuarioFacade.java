@@ -1,10 +1,12 @@
 package com.deustoRestaurant.DRestaurant.facade;
 
+import com.deustoRestaurant.DRestaurant.dto.LoginRequestDTO;
 import com.deustoRestaurant.DRestaurant.dto.UsuarioRequestDTO;
 import com.deustoRestaurant.DRestaurant.dto.UsuarioResponseDTO;
 import com.deustoRestaurant.DRestaurant.entity.Rol;
 import com.deustoRestaurant.DRestaurant.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -17,16 +19,20 @@ public class UsuarioFacade {
     private UsuarioService usuarioService;
 
     @PostMapping
-    public UsuarioResponseDTO registrar(@RequestBody UsuarioRequestDTO dto) {
-        return usuarioService.registrar(dto);
+    public ResponseEntity<UsuarioResponseDTO> registrar(@RequestBody UsuarioRequestDTO dto) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.registrar(dto));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UsuarioResponseDTO> login(@RequestParam String email, @RequestParam String password) {
+    public ResponseEntity<UsuarioResponseDTO> login(@RequestBody LoginRequestDTO dto) {
         try {
-            return ResponseEntity.ok(usuarioService.login(email, password));
+            return ResponseEntity.ok(usuarioService.login(dto.getEmail(), dto.getPassword()));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(404).build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 

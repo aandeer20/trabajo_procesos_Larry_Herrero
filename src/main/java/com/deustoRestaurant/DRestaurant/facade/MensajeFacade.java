@@ -4,6 +4,8 @@ import com.deustoRestaurant.DRestaurant.dto.MensajeRequestDTO;
 import com.deustoRestaurant.DRestaurant.dto.MensajeResponseDTO;
 import com.deustoRestaurant.DRestaurant.service.MensajeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -15,8 +17,12 @@ public class MensajeFacade {
     private MensajeService mensajeService;
 
     @PostMapping
-    public MensajeResponseDTO enviar(@RequestBody MensajeRequestDTO dto) {
-        return mensajeService.enviar(dto);
+    public ResponseEntity<MensajeResponseDTO> enviar(@RequestBody MensajeRequestDTO dto) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(mensajeService.enviar(dto));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 
     @GetMapping("/recibidos/{destinatarioId}")

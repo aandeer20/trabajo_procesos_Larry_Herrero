@@ -54,7 +54,7 @@ public class ReservaService {
         reserva.setObservaciones(dto.getObservaciones());
         reserva.setCliente(cliente);
         reserva.setRestaurante(restaurante);
-        reserva.setEstado(EstadoReserva.CONFIRMADA);
+        reserva.setEstado(EstadoReserva.PENDIENTE);
 
         return toDTO(reservaDAO.save(reserva));
     }
