@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,6 +27,7 @@ class ReservaServiceTest {
     @Mock private ReservaDAO reservaDAO;
     @Mock private UsuarioDAO usuarioDAO;
     @Mock private RestauranteDAO restauranteDAO;
+    @Mock private NotificacionService notificacionService;
 
     @InjectMocks
     private ReservaService reservaService;
@@ -34,6 +35,7 @@ class ReservaServiceTest {
     private Restaurante restaurante;
     private Usuario cliente;
     private Usuario camarero;
+    private Usuario gerente;
     private Reserva reserva;
 
     @BeforeEach
@@ -54,6 +56,11 @@ class ReservaServiceTest {
         camarero.setNombre("Pedro");
         camarero.setRol(Rol.CAMARERO);
 
+        gerente = new Usuario();
+        gerente.setId(3L);
+        gerente.setNombre("Elena");
+        gerente.setRol(Rol.GERENTE);
+
         reserva = new Reserva();
         reserva.setId(1L);
         reserva.setFecha(LocalDate.now());
@@ -72,15 +79,17 @@ class ReservaServiceTest {
 
         when(restauranteDAO.findById(1L)).thenReturn(Optional.of(restaurante));
         when(reservaDAO.countByRestauranteIdAndFechaAndTurnoAndEstadoNot(
-                1L, dto.getFecha(), Turno.COMIDA, EstadoReserva.CANCELADA)).thenReturn(5);
+                eq(1L), any(), eq(Turno.COMIDA), eq(EstadoReserva.CANCELADA))).thenReturn(5);
         when(usuarioDAO.findById(1L)).thenReturn(Optional.of(cliente));
         when(reservaDAO.save(any())).thenReturn(reserva);
+        when(usuarioDAO.findByRestauranteIdAndRol(1L, Rol.GERENTE)).thenReturn(List.of(gerente));
 
         ReservaResponseDTO result = reservaService.crear(dto);
 
         assertNotNull(result);
         assertEquals(Turno.COMIDA, result.getTurno());
         assertEquals("Carlos", result.getNombreCliente());
+        verify(notificacionService, atLeastOnce()).crear(eq(gerente), anyString());
     }
 
     @Test
@@ -98,13 +107,31 @@ class ReservaServiceTest {
 
         when(restauranteDAO.findById(1L)).thenReturn(Optional.of(restaurante));
         when(reservaDAO.countByRestauranteIdAndFechaAndTurnoAndEstadoNot(
-                1L, dto.getFecha(), Turno.CENA, EstadoReserva.CANCELADA)).thenReturn(3);
+                eq(1L), any(), eq(Turno.CENA), eq(EstadoReserva.CANCELADA))).thenReturn(3);
         when(usuarioDAO.findById(1L)).thenReturn(Optional.of(cliente));
         when(reservaDAO.save(any())).thenReturn(reservaCena);
+        when(usuarioDAO.findByRestauranteIdAndRol(1L, Rol.GERENTE)).thenReturn(List.of());
 
         ReservaResponseDTO result = reservaService.crear(dto);
 
         assertEquals(Turno.CENA, result.getTurno());
+    }
+
+    @Test
+    void crear_aforoQuedaLleno_disparaNotificacionAforo() {
+        ReservaRequestDTO dto = buildDTO(Turno.COMIDA);
+
+        when(restauranteDAO.findById(1L)).thenReturn(Optional.of(restaurante));
+        when(reservaDAO.countByRestauranteIdAndFechaAndTurnoAndEstadoNot(
+                eq(1L), any(), eq(Turno.COMIDA), eq(EstadoReserva.CANCELADA)))
+                .thenReturn(19).thenReturn(20);
+        when(usuarioDAO.findById(1L)).thenReturn(Optional.of(cliente));
+        when(reservaDAO.save(any())).thenReturn(reserva);
+        when(usuarioDAO.findByRestauranteIdAndRol(1L, Rol.GERENTE)).thenReturn(List.of(gerente));
+
+        reservaService.crear(dto);
+
+        verify(notificacionService, times(2)).crear(eq(gerente), anyString());
     }
 
     @Test
@@ -113,7 +140,7 @@ class ReservaServiceTest {
 
         when(restauranteDAO.findById(1L)).thenReturn(Optional.of(restaurante));
         when(reservaDAO.countByRestauranteIdAndFechaAndTurnoAndEstadoNot(
-                1L, dto.getFecha(), Turno.COMIDA, EstadoReserva.CANCELADA)).thenReturn(20);
+                eq(1L), any(), eq(Turno.COMIDA), eq(EstadoReserva.CANCELADA))).thenReturn(20);
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> reservaService.crear(dto));
@@ -127,7 +154,7 @@ class ReservaServiceTest {
 
         when(restauranteDAO.findById(1L)).thenReturn(Optional.of(restaurante));
         when(reservaDAO.countByRestauranteIdAndFechaAndTurnoAndEstadoNot(
-                1L, dto.getFecha(), Turno.CENA, EstadoReserva.CANCELADA)).thenReturn(15);
+                eq(1L), any(), eq(Turno.CENA), eq(EstadoReserva.CANCELADA))).thenReturn(15);
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> reservaService.crear(dto));
@@ -156,13 +183,27 @@ class ReservaServiceTest {
     // ── CANCELAR ───────────────────────────────────────────────────────────
 
     @Test
-    void cancelar_exitoso() {
+    void cancelar_exitoso_notificaGerentes() {
         when(reservaDAO.findById(1L)).thenReturn(Optional.of(reserva));
         when(reservaDAO.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(usuarioDAO.findByRestauranteIdAndRol(1L, Rol.GERENTE)).thenReturn(List.of(gerente));
 
         ReservaResponseDTO result = reservaService.cancelar(1L);
 
         assertEquals(EstadoReserva.CANCELADA, result.getEstado());
+        verify(notificacionService).crear(eq(gerente), anyString());
+    }
+
+    @Test
+    void cancelar_sinGerentes_noLanzaExcepcion() {
+        when(reservaDAO.findById(1L)).thenReturn(Optional.of(reserva));
+        when(reservaDAO.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(usuarioDAO.findByRestauranteIdAndRol(1L, Rol.GERENTE)).thenReturn(List.of());
+
+        ReservaResponseDTO result = reservaService.cancelar(1L);
+
+        assertEquals(EstadoReserva.CANCELADA, result.getEstado());
+        verify(notificacionService, never()).crear(any(), any());
     }
 
     @Test
@@ -175,13 +216,14 @@ class ReservaServiceTest {
     // ── CAMBIAR ESTADO ─────────────────────────────────────────────────────
 
     @Test
-    void cambiarEstado_aCompletada() {
+    void cambiarEstado_aCompletada_notificaCliente() {
         when(reservaDAO.findById(1L)).thenReturn(Optional.of(reserva));
         when(reservaDAO.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         ReservaResponseDTO result = reservaService.cambiarEstado(1L, EstadoReserva.COMPLETADA);
 
         assertEquals(EstadoReserva.COMPLETADA, result.getEstado());
+        verify(notificacionService).crear(eq(cliente), anyString());
     }
 
     @Test
@@ -192,6 +234,17 @@ class ReservaServiceTest {
         ReservaResponseDTO result = reservaService.cambiarEstado(1L, EstadoReserva.NO_SHOW);
 
         assertEquals(EstadoReserva.NO_SHOW, result.getEstado());
+        verify(notificacionService).crear(eq(cliente), anyString());
+    }
+
+    @Test
+    void cambiarEstado_aPendiente() {
+        when(reservaDAO.findById(1L)).thenReturn(Optional.of(reserva));
+        when(reservaDAO.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        ReservaResponseDTO result = reservaService.cambiarEstado(1L, EstadoReserva.PENDIENTE);
+
+        assertEquals(EstadoReserva.PENDIENTE, result.getEstado());
     }
 
     // ── ASIGNAR CAMARERO ───────────────────────────────────────────────────
@@ -206,6 +259,21 @@ class ReservaServiceTest {
         ReservaResponseDTO result = reservaService.asignarCamarero(1L, 2L);
 
         assertEquals("Pedro", result.getNombreCamarero());
+    }
+
+    @Test
+    void asignarCamarero_reservaNoEncontrada_lanzaExcepcion() {
+        when(reservaDAO.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> reservaService.asignarCamarero(99L, 2L));
+    }
+
+    @Test
+    void asignarCamarero_camareroNoEncontrado_lanzaExcepcion() {
+        when(reservaDAO.findById(1L)).thenReturn(Optional.of(reserva));
+        when(usuarioDAO.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> reservaService.asignarCamarero(1L, 99L));
     }
 
     // ── CONSULTAS ──────────────────────────────────────────────────────────
@@ -230,6 +298,16 @@ class ReservaServiceTest {
     }
 
     @Test
+    void obtenerPorCamareroYFecha_devuelveLista() {
+        reserva.setCamarero(camarero);
+        when(reservaDAO.findByCamareroIdAndFecha(2L, LocalDate.now())).thenReturn(List.of(reserva));
+
+        List<ReservaResponseDTO> result = reservaService.obtenerPorCamareroYFecha(2L, LocalDate.now());
+
+        assertEquals(1, result.size());
+    }
+
+    @Test
     void obtenerPorRestauranteYTurno_filtraPorTurno() {
         when(reservaDAO.findByRestauranteIdAndFechaAndTurno(1L, LocalDate.now(), Turno.COMIDA))
                 .thenReturn(List.of(reserva));
@@ -238,6 +316,28 @@ class ReservaServiceTest {
 
         assertEquals(1, result.size());
         assertEquals(Turno.COMIDA, result.get(0).getTurno());
+    }
+
+    @Test
+    void obtenerPendientes_devuelveSoloPendientes() {
+        reserva.setEstado(EstadoReserva.PENDIENTE);
+        when(reservaDAO.findByEstado(EstadoReserva.PENDIENTE)).thenReturn(List.of(reserva));
+
+        List<ReservaResponseDTO> result = reservaService.obtenerPendientes();
+
+        assertEquals(1, result.size());
+        assertEquals(EstadoReserva.PENDIENTE, result.get(0).getEstado());
+    }
+
+    @Test
+    void obtenerPendientesPorRestaurante_filtraPorRestaurante() {
+        reserva.setEstado(EstadoReserva.PENDIENTE);
+        when(reservaDAO.findByRestauranteIdAndEstado(1L, EstadoReserva.PENDIENTE)).thenReturn(List.of(reserva));
+
+        List<ReservaResponseDTO> result = reservaService.obtenerPendientesPorRestaurante(1L);
+
+        assertEquals(1, result.size());
+        assertEquals("DeustoRestaurant", result.get(0).getNombreRestaurante());
     }
 
     // ── HELPER ─────────────────────────────────────────────────────────────

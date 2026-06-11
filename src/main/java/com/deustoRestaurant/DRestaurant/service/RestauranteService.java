@@ -5,12 +5,16 @@ import com.deustoRestaurant.DRestaurant.dao.UsuarioDAO;
 import com.deustoRestaurant.DRestaurant.dto.RestauranteRequestDTO;
 import com.deustoRestaurant.DRestaurant.dto.RestauranteResponseDTO;
 import com.deustoRestaurant.DRestaurant.entity.Restaurante;
-import com.deustoRestaurant.DRestaurant.entity.Usuario;
+import com.deustoRestaurant.DRestaurant.entity.Rol;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Servicio de gestión de restaurantes.
+ * Permite crear, consultar, actualizar aforos y desactivar {@link Restaurante}.
+ */
 @Service
 public class RestauranteService {
 
@@ -20,67 +24,126 @@ public class RestauranteService {
     @Autowired
     private UsuarioDAO usuarioDAO;
 
+    /**
+     * Crea un nuevo restaurante y, si se indica un gerente, lo asocia al restaurante.
+     *
+     * @param dto datos del restaurante a crear
+     * @return el restaurante creado como {@link RestauranteResponseDTO}
+     * @throws RuntimeException si el gerente indicado no existe
+     */
     public RestauranteResponseDTO crear(RestauranteRequestDTO dto) {
-        Restaurante r = new Restaurante();
-        r.setNombre(dto.getNombre());
-        r.setDireccion(dto.getDireccion());
-        r.setTelefono(dto.getTelefono());
-        r.setHorarioComida(dto.getHorarioComida());
-        r.setHorarioCena(dto.getHorarioCena());
-        r.setAforoMaximoComida(dto.getAforoMaximoComida());
-        r.setAforoMaximoCena(dto.getAforoMaximoCena());
+        Restaurante restaurante = new Restaurante();
+        restaurante.setNombre(dto.getNombre());
+        restaurante.setDireccion(dto.getDireccion());
+        restaurante.setTelefono(dto.getTelefono());
+        restaurante.setHorarioComida(dto.getHorarioComida());
+        restaurante.setHorarioCena(dto.getHorarioCena());
+        restaurante.setAforoMaximoComida(dto.getAforoMaximoComida());
+        restaurante.setAforoMaximoCena(dto.getAforoMaximoCena());
+        restaurante.setActivo(true);
+        Restaurante saved = restauranteDAO.save(restaurante);
+
         if (dto.getGerenteId() != null) {
-            Usuario gerente = usuarioDAO.findById(dto.getGerenteId())
-                    .orElseThrow(() -> new RuntimeException("Gerente no encontrado"));
-            r.setGerente(gerente);
+            usuarioDAO.findById(dto.getGerenteId()).ifPresent(gerente -> {
+                gerente.setRestaurante(saved);
+                usuarioDAO.save(gerente);
+            });
         }
-        return toDTO(restauranteDAO.save(r));
+        return toDTO(saved);
     }
 
-    public RestauranteResponseDTO actualizar(Long id, RestauranteRequestDTO dto) {
-        Restaurante r = restauranteDAO.findById(id)
-                .orElseThrow(() -> new RuntimeException("Restaurante no encontrado"));
-        r.setNombre(dto.getNombre());
-        r.setDireccion(dto.getDireccion());
-        r.setTelefono(dto.getTelefono());
-        r.setHorarioComida(dto.getHorarioComida());
-        r.setHorarioCena(dto.getHorarioCena());
-        r.setAforoMaximoComida(dto.getAforoMaximoComida());
-        r.setAforoMaximoCena(dto.getAforoMaximoCena());
-        return toDTO(restauranteDAO.save(r));
-    }
-
-    public RestauranteResponseDTO actualizarAforoComida(Long id, int nuevoAforo) {
-        Restaurante r = restauranteDAO.findById(id)
-                .orElseThrow(() -> new RuntimeException("Restaurante no encontrado"));
-        r.setAforoMaximoComida(nuevoAforo);
-        return toDTO(restauranteDAO.save(r));
-    }
-
-    public RestauranteResponseDTO actualizarAforoCena(Long id, int nuevoAforo) {
-        Restaurante r = restauranteDAO.findById(id)
-                .orElseThrow(() -> new RuntimeException("Restaurante no encontrado"));
-        r.setAforoMaximoCena(nuevoAforo);
-        return toDTO(restauranteDAO.save(r));
-    }
-
-    public RestauranteResponseDTO desactivar(Long id) {
-        Restaurante r = restauranteDAO.findById(id)
-                .orElseThrow(() -> new RuntimeException("Restaurante no encontrado"));
-        r.setActivo(false);
-        return toDTO(restauranteDAO.save(r));
-    }
-
+    /**
+     * Devuelve todos los restaurantes registrados en el sistema.
+     *
+     * @return lista completa de restaurantes
+     */
     public List<RestauranteResponseDTO> obtenerTodos() {
         return restauranteDAO.findAll()
                 .stream().map(this::toDTO).collect(Collectors.toList());
     }
 
+    /**
+     * Devuelve únicamente los restaurantes activos.
+     *
+     * @return lista de restaurantes con {@code activo = true}
+     */
     public List<RestauranteResponseDTO> obtenerActivos() {
         return restauranteDAO.findByActivo(true)
                 .stream().map(this::toDTO).collect(Collectors.toList());
     }
 
+    /**
+     * Actualiza los datos generales de un restaurante.
+     *
+     * @param id  identificador del restaurante a actualizar
+     * @param dto nuevos datos del restaurante
+     * @return el restaurante actualizado
+     * @throws RuntimeException si el restaurante no existe
+     */
+    public RestauranteResponseDTO actualizar(Long id, RestauranteRequestDTO dto) {
+        Restaurante restaurante = restauranteDAO.findById(id)
+                .orElseThrow(() -> new RuntimeException("Restaurante no encontrado"));
+        restaurante.setNombre(dto.getNombre());
+        restaurante.setDireccion(dto.getDireccion());
+        restaurante.setTelefono(dto.getTelefono());
+        restaurante.setHorarioComida(dto.getHorarioComida());
+        restaurante.setHorarioCena(dto.getHorarioCena());
+        restaurante.setAforoMaximoComida(dto.getAforoMaximoComida());
+        restaurante.setAforoMaximoCena(dto.getAforoMaximoCena());
+        return toDTO(restauranteDAO.save(restaurante));
+    }
+
+    /**
+     * Actualiza el aforo máximo del turno de comida de un restaurante.
+     *
+     * @param id    identificador del restaurante
+     * @param aforo nuevo aforo máximo para comida
+     * @return el restaurante con el aforo actualizado
+     * @throws RuntimeException si el restaurante no existe
+     */
+    public RestauranteResponseDTO actualizarAforoComida(Long id, int aforo) {
+        Restaurante restaurante = restauranteDAO.findById(id)
+                .orElseThrow(() -> new RuntimeException("Restaurante no encontrado"));
+        restaurante.setAforoMaximoComida(aforo);
+        return toDTO(restauranteDAO.save(restaurante));
+    }
+
+    /**
+     * Actualiza el aforo máximo del turno de cena de un restaurante.
+     *
+     * @param id    identificador del restaurante
+     * @param aforo nuevo aforo máximo para cena
+     * @return el restaurante con el aforo actualizado
+     * @throws RuntimeException si el restaurante no existe
+     */
+    public RestauranteResponseDTO actualizarAforoCena(Long id, int aforo) {
+        Restaurante restaurante = restauranteDAO.findById(id)
+                .orElseThrow(() -> new RuntimeException("Restaurante no encontrado"));
+        restaurante.setAforoMaximoCena(aforo);
+        return toDTO(restauranteDAO.save(restaurante));
+    }
+
+    /**
+     * Desactiva lógicamente un restaurante (baja suave).
+     *
+     * @param id identificador del restaurante
+     * @return el restaurante con {@code activo = false}
+     * @throws RuntimeException si el restaurante no existe
+     */
+    public RestauranteResponseDTO desactivar(Long id) {
+        Restaurante restaurante = restauranteDAO.findById(id)
+                .orElseThrow(() -> new RuntimeException("Restaurante no encontrado"));
+        restaurante.setActivo(false);
+        return toDTO(restauranteDAO.save(restaurante));
+    }
+
+    /**
+     * Convierte una entidad {@link Restaurante} en su DTO de respuesta,
+     * incluyendo la lista de gerentes activos asignados.
+     *
+     * @param r entidad a convertir
+     * @return DTO con los datos públicos del restaurante
+     */
     private RestauranteResponseDTO toDTO(Restaurante r) {
         RestauranteResponseDTO dto = new RestauranteResponseDTO();
         dto.setId(r.getId());
@@ -92,9 +155,12 @@ public class RestauranteService {
         dto.setAforoMaximoComida(r.getAforoMaximoComida());
         dto.setAforoMaximoCena(r.getAforoMaximoCena());
         dto.setActivo(r.isActivo());
-        if (r.getGerente() != null) {
-            dto.setNombreGerente(r.getGerente().getNombre());
-        }
+        List<String> gerentes = usuarioDAO.findByRolAndActivo(Rol.GERENTE, true)
+                .stream()
+                .filter(u -> u.getRestaurante() != null && u.getRestaurante().getId().equals(r.getId()))
+                .map(u -> u.getNombre() + " " + (u.getApellidos() != null ? u.getApellidos() : ""))
+                .collect(Collectors.toList());
+        dto.setGerentes(gerentes);
         return dto;
     }
 }

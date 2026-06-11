@@ -12,6 +12,11 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Controlador REST para la gestión de reservas.
+ * Expone endpoints para crear, cancelar, cambiar estado, asignar camarero
+ * y consultar reservas, incluidas las pendientes de confirmación.
+ */
 @RestController
 @RequestMapping("/api/reservas")
 public class ReservaFacade {
@@ -66,5 +71,15 @@ public class ReservaFacade {
             @RequestParam LocalDate fecha,
             @RequestParam Turno turno) {
         return reservaService.obtenerPorRestauranteYTurno(restauranteId, fecha, turno);
+    }
+
+    @GetMapping("/pendientes")
+    public List<ReservaResponseDTO> obtenerPendientes() {
+        return reservaService.obtenerPendientes();
+    }
+
+    @GetMapping("/pendientes/restaurante/{restauranteId}")
+    public List<ReservaResponseDTO> obtenerPendientesPorRestaurante(@PathVariable Long restauranteId) {
+        return reservaService.obtenerPendientesPorRestaurante(restauranteId);
     }
 }

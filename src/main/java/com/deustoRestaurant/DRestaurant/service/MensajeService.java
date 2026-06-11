@@ -12,6 +12,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Servicio de mensajería interna entre usuarios.
+ * Gestiona el envío, la consulta y el marcado de lectura de {@link Mensaje}.
+ */
 @Service
 public class MensajeService {
 
@@ -21,6 +25,13 @@ public class MensajeService {
     @Autowired
     private UsuarioDAO usuarioDAO;
 
+    /**
+     * Envía un mensaje de un usuario a otro.
+     *
+     * @param dto datos del mensaje (contenido, remitente, destinatario)
+     * @return el mensaje creado como {@link MensajeResponseDTO}
+     * @throws RuntimeException si el remitente o el destinatario no existen
+     */
     public MensajeResponseDTO enviar(MensajeRequestDTO dto) {
         Usuario remitente = usuarioDAO.findById(dto.getRemitenteId())
                 .orElseThrow(() -> new RuntimeException("Remitente no encontrado"));
@@ -29,28 +40,55 @@ public class MensajeService {
 
         Mensaje mensaje = new Mensaje();
         mensaje.setContenido(dto.getContenido());
+        mensaje.setFechaCreacion(LocalDateTime.now());
+        mensaje.setLeido(false);
         mensaje.setRemitente(remitente);
         mensaje.setDestinatario(destinatario);
-        mensaje.setFechaCreacion(LocalDateTime.now());
 
         return toDTO(mensajeDAO.save(mensaje));
     }
 
-    public List<MensajeResponseDTO> obtenerRecibidos(Long destinatarioId) {
-        return mensajeDAO.findByDestinatarioId(destinatarioId)
+    /**
+     * Devuelve todos los mensajes recibidos por un usuario.
+     *
+     * @param usuarioId identificador del destinatario
+     * @return lista de mensajes recibidos
+     */
+    public List<MensajeResponseDTO> obtenerRecibidos(Long usuarioId) {
+        return mensajeDAO.findByDestinatarioId(usuarioId)
                 .stream().map(this::toDTO).collect(Collectors.toList());
     }
 
-    public List<MensajeResponseDTO> obtenerNoLeidos(Long destinatarioId) {
-        return mensajeDAO.findByDestinatarioIdAndLeido(destinatarioId, false)
+    /**
+     * Devuelve los mensajes no leídos de un usuario.
+     *
+     * @param usuarioId identificador del destinatario
+     * @return lista de mensajes pendientes de leer
+     */
+    public List<MensajeResponseDTO> obtenerNoLeidos(Long usuarioId) {
+        return mensajeDAO.findByDestinatarioIdAndLeido(usuarioId, false)
                 .stream().map(this::toDTO).collect(Collectors.toList());
     }
 
+    /**
+     * Devuelve la conversación entre dos usuarios (mensajes del remitente al destinatario).
+     *
+     * @param remitenteId    identificador del remitente
+     * @param destinatarioId identificador del destinatario
+     * @return lista de mensajes entre ambos usuarios en esa dirección
+     */
     public List<MensajeResponseDTO> obtenerConversacion(Long remitenteId, Long destinatarioId) {
         return mensajeDAO.findByRemitenteIdAndDestinatarioId(remitenteId, destinatarioId)
                 .stream().map(this::toDTO).collect(Collectors.toList());
     }
 
+    /**
+     * Marca un mensaje como leído.
+     *
+     * @param id identificador del mensaje
+     * @return el mensaje actualizado con {@code leido = true}
+     * @throws RuntimeException si el mensaje no existe
+     */
     public MensajeResponseDTO marcarLeido(Long id) {
         Mensaje mensaje = mensajeDAO.findById(id)
                 .orElseThrow(() -> new RuntimeException("Mensaje no encontrado"));
@@ -58,6 +96,12 @@ public class MensajeService {
         return toDTO(mensajeDAO.save(mensaje));
     }
 
+    /**
+     * Convierte una entidad {@link Mensaje} en su DTO de respuesta.
+     *
+     * @param m entidad a convertir
+     * @return DTO con los datos del mensaje
+     */
     private MensajeResponseDTO toDTO(Mensaje m) {
         MensajeResponseDTO dto = new MensajeResponseDTO();
         dto.setId(m.getId());

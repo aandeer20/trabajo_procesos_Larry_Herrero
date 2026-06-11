@@ -11,6 +11,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+/**
+ * Controlador REST para la gestión de usuarios.
+ * Expone endpoints de registro, autenticación y operaciones CRUD sobre usuarios.
+ */
 @RestController
 @RequestMapping("/api/usuarios")
 public class UsuarioFacade {
@@ -44,6 +48,20 @@ public class UsuarioFacade {
     @GetMapping("/restaurante/{restauranteId}/camareros")
     public List<UsuarioResponseDTO> obtenerCamarerosPorRestaurante(@PathVariable Long restauranteId) {
         return usuarioService.obtenerCamarerosPorRestaurante(restauranteId);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UsuarioResponseDTO> actualizar(@PathVariable Long id, @RequestBody UsuarioRequestDTO dto) {
+        try {
+            return ResponseEntity.ok(usuarioService.actualizar(id, dto));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
+    @PutMapping("/{id}/activar")
+    public UsuarioResponseDTO activar(@PathVariable Long id) {
+        return usuarioService.activar(id);
     }
 
     @PutMapping("/{usuarioId}/restaurante/{restauranteId}")

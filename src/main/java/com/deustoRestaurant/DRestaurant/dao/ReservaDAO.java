@@ -14,4 +14,6 @@ public interface ReservaDAO extends JpaRepository<Reserva, Long> {
     List<Reserva> findByCamareroIdAndFecha(Long camareroId, LocalDate fecha);
     List<Reserva> findByRestauranteIdAndFechaAndTurno(Long restauranteId, LocalDate fecha, Turno turno);
     int countByRestauranteIdAndFechaAndTurnoAndEstadoNot(Long restauranteId, LocalDate fecha, Turno turno, EstadoReserva estado);
+    List<Reserva> findByEstado(EstadoReserva estado);
+    List<Reserva> findByRestauranteIdAndEstado(Long restauranteId, EstadoReserva estado);
 }

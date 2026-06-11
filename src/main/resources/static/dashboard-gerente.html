@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/auth.css">
     <style>
-        .tabs { display:flex; gap:8px; margin-bottom:36px; border-bottom:2px solid #e8e3da; }
+        .tabs { display:flex; gap:8px; margin-bottom:36px; border-bottom:2px solid #e8e3da; flex-wrap:wrap; }
         .tab-btn {
             padding:12px 28px; background:transparent; border:none; border-bottom:3px solid transparent;
             font-family:'Georgia',serif; font-size:1rem; color:#888; cursor:pointer; transition:all 0.2s; margin-bottom:-2px;
@@ -49,6 +49,8 @@
         .badge-no_show    { background:#f3e5f5; color:#6a1b9a; }
         .badge-gerente    { background:#fce4ec; color:#ad1457; }
         .badge-camarero   { background:#e8f5e9; color:#2e7d32; }
+        .badge-activo     { background:#e8f5e9; color:#2e7d32; }
+        .badge-inactivo   { background:#fce4ec; color:#c62828; }
         .filtros { display:flex; align-items:center; gap:16px; margin-bottom:24px; flex-wrap:wrap; }
         .filtros label { font-size:0.85rem; color:#555; font-weight:bold; }
         .filtros input, .filtros select { padding:8px 14px; border:1px solid #ddd; border-radius:4px; font-family:'Georgia',serif; font-size:0.9rem; outline:none; }
@@ -64,11 +66,28 @@
         .seccion-titulo { font-size:1.3rem; color:#1a1a1a; margin-bottom:24px; border-bottom:2px solid #c9a84c; padding-bottom:8px; }
         .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; justify-content:center; align-items:center; }
         .modal-overlay.open { display:flex; }
-        .modal { background:#fff; border-radius:8px; padding:36px; width:100%; max-width:480px; box-shadow:0 8px 40px rgba(0,0,0,0.2); max-height:90vh; overflow-y:auto; }
+        .modal { background:#fff; border-radius:8px; padding:36px; width:100%; max-width:520px; box-shadow:0 8px 40px rgba(0,0,0,0.2); max-height:90vh; overflow-y:auto; }
         .modal h3 { font-size:1.2rem; margin-bottom:20px; color:#1a1a1a; }
         .modal-actions { display:flex; gap:12px; margin-top:24px; justify-content:flex-end; }
         .btn-secondary { padding:10px 20px; background:transparent; border:1px solid #bbb; color:#555; border-radius:4px; font-family:'Georgia',serif; cursor:pointer; transition:all 0.2s; }
         .btn-secondary:hover { border-color:#555; color:#333; }
+
+        /* ── Notificaciones ── */
+        .notif-btn { position:relative; background:none; border:none; cursor:pointer; font-size:1.3rem; padding:4px 8px; color:#fff; }
+        .notif-badge { position:absolute; top:0; right:0; background:#c62828; color:#fff; border-radius:50%; font-size:0.65rem; font-weight:bold; min-width:17px; height:17px; display:flex; align-items:center; justify-content:center; padding:0 3px; }
+        .notif-panel { display:none; position:absolute; top:calc(100% + 8px); right:0; width:340px; max-height:420px; background:#fff; border-radius:10px; box-shadow:0 8px 30px rgba(0,0,0,0.18); z-index:1000; overflow:hidden; flex-direction:column; }
+        .notif-panel.open { display:flex; }
+        .notif-panel-header { padding:12px 16px; background:#1a237e; color:#fff; display:flex; justify-content:space-between; align-items:center; font-family:'Georgia',serif; font-size:0.95rem; font-weight:bold; }
+        .notif-panel-header button { background:none; border:1px solid rgba(255,255,255,0.5); color:#fff; border-radius:4px; padding:3px 10px; font-size:0.75rem; cursor:pointer; }
+        .notif-list { overflow-y:auto; flex:1; }
+        .notif-item { padding:12px 16px; border-bottom:1px solid #f0f0f0; cursor:pointer; transition:background 0.15s; }
+        .notif-item:hover { background:#f5f5f5; }
+        .notif-item.no-leida { background:#fff8e1; border-left:3px solid #f57f17; }
+        .notif-item.no-leida:hover { background:#fff3cd; }
+        .notif-msg { font-size:0.88rem; color:#333; line-height:1.4; }
+        .notif-fecha { font-size:0.75rem; color:#999; margin-top:4px; }
+        .notif-empty { padding:24px; text-align:center; color:#aaa; font-size:0.9rem; }
+        .notif-wrapper { position:relative; }
     </style>
 </head>
 <body>
@@ -76,6 +95,21 @@
         <a class="nav-logo" href="index.html">Deusto<span>Restaurant</span></a>
         <div class="dashboard-nav-user">
             <span id="nav-nombre"></span>
+            <div class="notif-wrapper">
+                <button class="notif-btn" id="btn-notif" onclick="toggleNotifPanel()" title="Notificaciones">
+                    🔔
+                    <span class="notif-badge" id="notif-badge" style="display:none">0</span>
+                </button>
+                <div class="notif-panel" id="notif-panel">
+                    <div class="notif-panel-header">
+                        <span>Notificaciones</span>
+                        <button onclick="marcarTodasLeidas()">Marcar todas como leídas</button>
+                    </div>
+                    <div class="notif-list" id="notif-list">
+                        <div class="notif-empty">Sin notificaciones</div>
+                    </div>
+                </div>
+            </div>
             <button class="btn-logout" onclick="cerrarSesion()">Cerrar sesión</button>
         </div>
     </nav>
@@ -84,9 +118,10 @@
         <h1>Panel <span>Gerente</span></h1>
         <p class="subtitle" id="subtitulo"></p>
         <div class="tabs">
-            <button class="tab-btn active" data-tab="crear"     onclick="cambiarTab('crear')">🍽 Crear reserva</button>
-            <button class="tab-btn"         data-tab="reservas"  onclick="cambiarTab('reservas')">📋 Visualizar reservas</button>
-            <button class="tab-btn"         data-tab="empleados" onclick="cambiarTab('empleados')">👥 Empleados</button>
+            <button class="tab-btn active" data-tab="crear"        onclick="cambiarTab('crear')">🍽 Crear reserva</button>
+            <button class="tab-btn"         data-tab="reservas"     onclick="cambiarTab('reservas')">📋 Visualizar reservas</button>
+            <button class="tab-btn"         data-tab="restaurantes" onclick="cambiarTab('restaurantes')">🏠 Restaurantes</button>
+            <button class="tab-btn"         data-tab="empleados"    onclick="cambiarTab('empleados')">👥 Empleados</button>
         </div>
 
         <!-- CREAR RESERVA -->
@@ -162,6 +197,35 @@
                     <tr><td colspan="7" class="empty-msg">Selecciona una fecha para ver reservas.</td></tr>
                 </tbody>
             </table>
+
+            <div style="margin-top:2.5rem;">
+                <h3 class="seccion-titulo" style="font-size:1.1rem;color:#c62828;display:flex;align-items:center;gap:8px;">
+                    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f57f17;"></span>
+                    Reservas pendientes de confirmar
+                </h3>
+                <table>
+                    <thead>
+                        <tr><th>Restaurante</th><th>Cliente</th><th>Fecha</th><th>Turno</th><th>Comensales</th><th>Observaciones</th><th></th></tr>
+                    </thead>
+                    <tbody id="tabla-pendientes">
+                        <tr><td colspan="7" class="empty-msg">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- RESTAURANTES -->
+        <div class="tab-panel" id="tab-restaurantes">
+            <h2 class="seccion-titulo">Restaurantes</h2>
+            <button class="btn-nuevo" onclick="abrirModalRestaurante(null)">+ Nuevo restaurante</button>
+            <table>
+                <thead>
+                    <tr><th>Nombre</th><th>Dirección</th><th>Teléfono</th><th>Aforo Comida</th><th>Aforo Cena</th><th>Estado</th><th>Acciones</th></tr>
+                </thead>
+                <tbody id="tabla-restaurantes">
+                    <tr><td colspan="7" class="empty-msg">Cargando...</td></tr>
+                </tbody>
+            </table>
         </div>
 
         <!-- EMPLEADOS -->
@@ -170,7 +234,7 @@
             <button class="btn-nuevo" onclick="abrirModalEmpleado()">+ Nuevo empleado</button>
             <table>
                 <thead>
-                    <tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Estado</th></tr>
+                    <tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr>
                 </thead>
                 <tbody id="tabla-empleados">
                     <tr><td colspan="4" class="empty-msg">Cargando...</td></tr>
@@ -195,6 +259,49 @@
             <div class="modal-actions">
                 <button class="btn-secondary" onclick="cerrarModal('modal-estado')">Cancelar</button>
                 <button class="btn-submit" onclick="guardarEstado()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: crear/editar restaurante -->
+    <div class="modal-overlay" id="modal-restaurante">
+        <div class="modal">
+            <h3 id="modal-rest-titulo">Nuevo restaurante</h3>
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label>Nombre</label>
+                    <input type="text" id="rest-nombre" placeholder="Nombre del restaurante" required>
+                </div>
+                <div class="form-group full">
+                    <label>Dirección</label>
+                    <input type="text" id="rest-direccion" placeholder="Calle, número, ciudad">
+                </div>
+                <div class="form-group">
+                    <label>Teléfono</label>
+                    <input type="tel" id="rest-telefono" placeholder="944 000 000">
+                </div>
+                <div class="form-group">
+                    <label>Horario Comida</label>
+                    <input type="text" id="rest-horarioComida" placeholder="13:00-16:00">
+                </div>
+                <div class="form-group">
+                    <label>Horario Cena</label>
+                    <input type="text" id="rest-horarioCena" placeholder="20:00-23:00">
+                </div>
+                <div class="form-group">
+                    <label>Aforo máximo Comida</label>
+                    <input type="number" id="rest-aforoComida" min="1" placeholder="Ej: 30">
+                </div>
+                <div class="form-group">
+                    <label>Aforo máximo Cena</label>
+                    <input type="number" id="rest-aforoCena" min="1" placeholder="Ej: 20">
+                </div>
+            </div>
+            <span class="error-msg" id="rest-error"></span>
+            <span class="success-msg" id="rest-ok"></span>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="cerrarModal('modal-restaurante')">Cancelar</button>
+                <button class="btn-submit" onclick="guardarRestaurante()">Guardar</button>
             </div>
         </div>
     </div>
@@ -242,6 +349,44 @@
         </div>
     </div>
 
+    <!-- Modal: editar empleado -->
+    <div class="modal-overlay" id="modal-editar-empleado">
+        <div class="modal">
+            <h3>Editar empleado</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="edit-emp-nombre" placeholder="Nombre">
+                </div>
+                <div class="form-group">
+                    <label>Apellidos</label>
+                    <input type="text" id="edit-emp-apellidos" placeholder="Apellidos">
+                </div>
+                <div class="form-group full">
+                    <label>Teléfono</label>
+                    <input type="tel" id="edit-emp-telefono" placeholder="600 000 000">
+                </div>
+                <div class="form-group full">
+                    <label>Rol</label>
+                    <select id="edit-emp-rol">
+                        <option value="CAMARERO">Camarero</option>
+                        <option value="GERENTE">Gerente</option>
+                    </select>
+                </div>
+                <div class="form-group full">
+                    <label>Nueva contraseña <span style="color:#aaa;font-weight:normal">(dejar vacío para no cambiar)</span></label>
+                    <input type="password" id="edit-emp-password" placeholder="Nueva contraseña">
+                </div>
+            </div>
+            <span class="error-msg" id="edit-emp-error"></span>
+            <span class="success-msg" id="edit-emp-ok"></span>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="cerrarModal('modal-editar-empleado')">Cancelar</button>
+                <button class="btn-submit" onclick="guardarEmpleado()">Guardar cambios</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/app.js"></script>
     <script>
         const usuario = JSON.parse(sessionStorage.getItem('usuario'));
@@ -254,25 +399,25 @@
 
         let restauranteId = null;
         let reservaEditandoId = null;
+        let restauranteEditandoId = null;
         let todosRestaurantes = [];
 
         async function init() {
             try {
-                const r = await fetch(`${API_BASE}/restaurantes/activos`);
+                const r = await fetch(`${API_BASE}/restaurantes`);
                 todosRestaurantes = await r.json();
 
-                const selRest = document.getElementById('res-restaurante');
+                const selRest    = document.getElementById('res-restaurante');
                 const filtroRest = document.getElementById('filtro-restaurante');
                 todosRestaurantes.forEach(rest => {
-                    const opt1 = document.createElement('option');
-                    opt1.value = rest.id;
-                    opt1.textContent = rest.nombre + (rest.direccion ? ' — ' + rest.direccion : '');
-                    selRest.appendChild(opt1);
-
-                    const opt2 = document.createElement('option');
-                    opt2.value = rest.id;
-                    opt2.textContent = rest.nombre;
-                    filtroRest.appendChild(opt2);
+                    [selRest, filtroRest].forEach((sel, i) => {
+                        const opt = document.createElement('option');
+                        opt.value = rest.id;
+                        opt.textContent = i === 0
+                            ? rest.nombre + (rest.direccion ? ' — ' + rest.direccion : '')
+                            : rest.nombre;
+                        sel.appendChild(opt);
+                    });
                 });
                 if (todosRestaurantes.length) restauranteId = todosRestaurantes[0].id;
 
@@ -295,9 +440,12 @@
         function cambiarTab(nombre) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === nombre));
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + nombre));
-            if (nombre === 'reservas')  cargarReservas();
-            if (nombre === 'empleados') cargarEmpleados();
+            if (nombre === 'reservas') { cargarReservas(); cargarPendientes(); }
+            if (nombre === 'restaurantes') cargarRestaurantes();
+            if (nombre === 'empleados')    cargarEmpleados();
         }
+
+        // ── RESERVAS ──────────────────────────────────────────────────────────
 
         async function crearReserva(e) {
             e.preventDefault();
@@ -343,7 +491,6 @@
                     const resultados = await Promise.all(promesas);
                     reservas = resultados.flat();
                 }
-
                 if (fecha) reservas = reservas.filter(r => r.fecha === fecha);
                 if (turno) reservas = reservas.filter(r => r.turno === turno);
 
@@ -364,6 +511,51 @@
             } catch { tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">Error al cargar.</td></tr>'; }
         }
 
+        async function cargarPendientes() {
+            const filtroRest = document.getElementById('filtro-restaurante').value;
+            const tbody = document.getElementById('tabla-pendientes');
+            const url = filtroRest
+                ? `${API_BASE}/reservas/pendientes/restaurante/${filtroRest}`
+                : `${API_BASE}/reservas/pendientes`;
+            try {
+                const res = await fetch(url);
+                const pendientes = await res.json();
+                if (!pendientes.length) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">No hay reservas pendientes.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = pendientes.map(r => `
+                    <tr>
+                        <td>${r.nombreRestaurante}</td>
+                        <td>${r.nombreCliente}</td>
+                        <td>${r.fecha}</td>
+                        <td>${r.turno}</td>
+                        <td>${r.numComensales}</td>
+                        <td>${r.observaciones || '—'}</td>
+                        <td>
+                            <button class="btn-editar" onclick="confirmarReserva(${r.id})">Confirmar</button>
+                            <button class="btn-eliminar" style="margin-left:4px" onclick="cancelarPendiente(${r.id})">Cancelar</button>
+                        </td>
+                    </tr>`).join('');
+            } catch { tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">Error al cargar.</td></tr>'; }
+        }
+
+        async function confirmarReserva(id) {
+            await fetch(`${API_BASE}/reservas/${id}/estado`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ estado: 'CONFIRMADA' })
+            });
+            cargarReservas();
+            cargarPendientes();
+        }
+
+        async function cancelarPendiente(id) {
+            if (!confirm('¿Cancelar esta reserva pendiente?')) return;
+            await fetch(`${API_BASE}/reservas/${id}/cancelar`, { method: 'PUT' });
+            cargarReservas();
+            cargarPendientes();
+        }
+
         function abrirModalEstado(id, estadoActual) {
             reservaEditandoId = id;
             document.getElementById('nuevo-estado').value = estadoActual;
@@ -376,12 +568,98 @@
             });
             cerrarModal('modal-estado');
             cargarReservas();
+            cargarPendientes();
         }
         async function eliminarReserva(id) {
             if (!confirm('¿Cancelar esta reserva?')) return;
             await fetch(`${API_BASE}/reservas/${id}/cancelar`, { method: 'PUT' });
             cargarReservas();
         }
+
+        // ── RESTAURANTES ──────────────────────────────────────────────────────
+
+        async function cargarRestaurantes() {
+            const tbody = document.getElementById('tabla-restaurantes');
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">Cargando...</td></tr>';
+            try {
+                const res = await fetch(`${API_BASE}/restaurantes`);
+                const lista = await res.json();
+                if (!lista.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">No hay restaurantes.</td></tr>'; return; }
+                tbody.innerHTML = lista.map(r => `
+                    <tr>
+                        <td><strong>${r.nombre}</strong></td>
+                        <td>${r.direccion || '—'}</td>
+                        <td>${r.telefono || '—'}</td>
+                        <td>${r.aforoMaximoComida ?? '—'}</td>
+                        <td>${r.aforoMaximoCena ?? '—'}</td>
+                        <td><span class="badge badge-${r.activo ? 'activo' : 'inactivo'}">${r.activo ? 'Activo' : 'Inactivo'}</span></td>
+                        <td>
+                            <button class="btn-editar" onclick="abrirModalRestaurante(${JSON.stringify(r).replace(/"/g, '&quot;')})">Editar</button>
+                            ${r.activo ? `<button class="btn-eliminar" onclick="desactivarRestaurante(${r.id})">Desactivar</button>` : ''}
+                        </td>
+                    </tr>`).join('');
+            } catch { tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">Error al cargar.</td></tr>'; }
+        }
+
+        function abrirModalRestaurante(rest) {
+            restauranteEditandoId = rest ? rest.id : null;
+            document.getElementById('modal-rest-titulo').textContent = rest ? 'Editar restaurante' : 'Nuevo restaurante';
+            document.getElementById('rest-nombre').value       = rest?.nombre       || '';
+            document.getElementById('rest-direccion').value    = rest?.direccion    || '';
+            document.getElementById('rest-telefono').value     = rest?.telefono     || '';
+            document.getElementById('rest-horarioComida').value = rest?.horarioComida || '';
+            document.getElementById('rest-horarioCena').value  = rest?.horarioCena  || '';
+            document.getElementById('rest-aforoComida').value  = rest?.aforoMaximoComida ?? '';
+            document.getElementById('rest-aforoCena').value    = rest?.aforoMaximoCena  ?? '';
+            document.getElementById('rest-error').textContent  = '';
+            document.getElementById('rest-ok').textContent     = '';
+            document.getElementById('modal-restaurante').classList.add('open');
+        }
+
+        async function guardarRestaurante() {
+            const errorEl = document.getElementById('rest-error');
+            const okEl    = document.getElementById('rest-ok');
+            errorEl.textContent = ''; okEl.textContent = '';
+
+            const nombre = document.getElementById('rest-nombre').value.trim();
+            if (!nombre) { errorEl.textContent = 'El nombre es obligatorio.'; return; }
+
+            const body = {
+                nombre,
+                direccion:        document.getElementById('rest-direccion').value.trim(),
+                telefono:         document.getElementById('rest-telefono').value.trim(),
+                horarioComida:    document.getElementById('rest-horarioComida').value.trim(),
+                horarioCena:      document.getElementById('rest-horarioCena').value.trim(),
+                aforoMaximoComida: parseInt(document.getElementById('rest-aforoComida').value) || 0,
+                aforoMaximoCena:   parseInt(document.getElementById('rest-aforoCena').value)   || 0
+            };
+
+            try {
+                let res;
+                if (restauranteEditandoId) {
+                    res = await fetch(`${API_BASE}/restaurantes/${restauranteEditandoId}`, {
+                        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+                    });
+                } else {
+                    res = await fetch(`${API_BASE}/restaurantes`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+                    });
+                }
+                if (!res.ok) { errorEl.textContent = 'Error del servidor.'; return; }
+                okEl.textContent = restauranteEditandoId ? 'Restaurante actualizado.' : 'Restaurante creado.';
+                setTimeout(() => { cerrarModal('modal-restaurante'); cargarRestaurantes(); }, 1000);
+            } catch { errorEl.textContent = 'No se pudo conectar.'; }
+        }
+
+        async function desactivarRestaurante(id) {
+            if (!confirm('¿Seguro que quieres desactivar este restaurante?')) return;
+            try {
+                await fetch(`${API_BASE}/restaurantes/${id}`, { method: 'DELETE' });
+                cargarRestaurantes();
+            } catch { alert('Error al desactivar.'); }
+        }
+
+        // ── EMPLEADOS ─────────────────────────────────────────────────────────
 
         async function cargarEmpleados() {
             const tbody = document.getElementById('tabla-empleados');
@@ -403,15 +681,24 @@
                         <td>${e.activo
                             ? '<span style="color:#2e7d32;font-weight:bold">Activo</span>'
                             : '<span style="color:#c62828;font-weight:bold">Inactivo</span>'}</td>
+                        <td>
+                            <button class="btn-editar" onclick='abrirModalEditarEmpleado(${JSON.stringify(e)})'>Editar</button>
+                            ${e.activo
+                                ? `<button class="btn-eliminar" onclick="toggleEmpleado(${e.id}, false)">Desactivar</button>`
+                                : `<button class="btn-buscar" style="margin-left:6px" onclick="toggleEmpleado(${e.id}, true)">Activar</button>`}
+                        </td>
                     </tr>`).join('');
             } catch { tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">Error al cargar.</td></tr>'; }
         }
 
         function abrirModalEmpleado() {
+            ['emp-nombre','emp-apellidos','emp-email','emp-password','emp-telefono'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('emp-rol').value = '';
             document.getElementById('emp-error').textContent = '';
             document.getElementById('emp-ok').textContent = '';
             document.getElementById('modal-empleado').classList.add('open');
         }
+
         async function crearEmpleado() {
             const errorEl = document.getElementById('emp-error');
             const okEl    = document.getElementById('emp-ok');
@@ -440,10 +727,128 @@
             } catch { errorEl.textContent = 'No se pudo conectar.'; }
         }
 
+        let empleadoEditandoId = null;
+
+        function abrirModalEditarEmpleado(emp) {
+            empleadoEditandoId = emp.id;
+            document.getElementById('edit-emp-nombre').value    = emp.nombre    || '';
+            document.getElementById('edit-emp-apellidos').value = emp.apellidos || '';
+            document.getElementById('edit-emp-telefono').value  = emp.telefono  || '';
+            document.getElementById('edit-emp-rol').value       = emp.rol       || 'CAMARERO';
+            document.getElementById('edit-emp-password').value  = '';
+            document.getElementById('edit-emp-error').textContent = '';
+            document.getElementById('edit-emp-ok').textContent    = '';
+            document.getElementById('modal-editar-empleado').classList.add('open');
+        }
+
+        async function guardarEmpleado() {
+            const errorEl = document.getElementById('edit-emp-error');
+            const okEl    = document.getElementById('edit-emp-ok');
+            errorEl.textContent = ''; okEl.textContent = '';
+
+            const body = {
+                nombre:    document.getElementById('edit-emp-nombre').value.trim(),
+                apellidos: document.getElementById('edit-emp-apellidos').value.trim(),
+                telefono:  document.getElementById('edit-emp-telefono').value.trim(),
+                rol:       document.getElementById('edit-emp-rol').value,
+                password:  document.getElementById('edit-emp-password').value
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/usuarios/${empleadoEditandoId}`, {
+                    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+                });
+                if (!res.ok) { errorEl.textContent = 'Error al guardar los cambios.'; return; }
+                okEl.textContent = 'Empleado actualizado correctamente.';
+                setTimeout(() => { cerrarModal('modal-editar-empleado'); cargarEmpleados(); }, 1000);
+            } catch { errorEl.textContent = 'No se pudo conectar.'; }
+        }
+
+        async function toggleEmpleado(id, activar) {
+            const accion = activar ? 'activar' : 'desactivar';
+            if (!confirm(`¿Seguro que quieres ${accion} este empleado?`)) return;
+            const url = activar
+                ? `${API_BASE}/usuarios/${id}/activar`
+                : `${API_BASE}/usuarios/${id}`;
+            const method = activar ? 'PUT' : 'DELETE';
+            await fetch(url, { method });
+            cargarEmpleados();
+        }
+
+        // ── UTILS ─────────────────────────────────────────────────────────────
+
         function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
         function cerrarSesion() { sessionStorage.removeItem('usuario'); window.location.href = 'login.html'; }
 
         init();
+
+        // ── Notificaciones ──────────────────────────────────────
+        let notifInterval = null;
+
+        async function cargarNotificaciones() {
+            try {
+                const res = await fetch(`${API_BASE}/notificaciones/usuario/${usuario.id}`);
+                const lista = await res.json();
+                const noLeidas = lista.filter(n => !n.leida).length;
+
+                const badge = document.getElementById('notif-badge');
+                if (noLeidas > 0) {
+                    badge.textContent = noLeidas > 99 ? '99+' : noLeidas;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+
+                const listEl = document.getElementById('notif-list');
+                if (!lista.length) {
+                    listEl.innerHTML = '<div class="notif-empty">Sin notificaciones</div>';
+                    return;
+                }
+                listEl.innerHTML = lista.map(n => `
+                    <div class="notif-item ${n.leida ? '' : 'no-leida'}" onclick="leerNotif(${n.id}, this)">
+                        <div class="notif-msg">${n.mensaje}</div>
+                        <div class="notif-fecha">${formatearFechaNotif(n.fechaCreacion)}</div>
+                    </div>`).join('');
+            } catch {}
+        }
+
+        function formatearFechaNotif(isoStr) {
+            if (!isoStr) return '';
+            const d = new Date(isoStr);
+            return d.toLocaleDateString('es-ES', { day:'2-digit', month:'short' })
+                + ' ' + d.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
+        }
+
+        async function leerNotif(id, el) {
+            if (el.classList.contains('no-leida')) {
+                await fetch(`${API_BASE}/notificaciones/${id}/leer`, { method: 'PUT' });
+                el.classList.remove('no-leida');
+                cargarNotificaciones();
+            }
+        }
+
+        async function marcarTodasLeidas() {
+            await fetch(`${API_BASE}/notificaciones/usuario/${usuario.id}/leer-todas`, { method: 'PUT' });
+            cargarNotificaciones();
+        }
+
+        function toggleNotifPanel() {
+            const panel = document.getElementById('notif-panel');
+            panel.classList.toggle('open');
+            if (panel.classList.contains('open')) cargarNotificaciones();
+        }
+
+        document.addEventListener('click', function(e) {
+            const wrapper = document.querySelector('.notif-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                document.getElementById('notif-panel').classList.remove('open');
+            }
+        });
+
+        // Poll cada 30 segundos
+        cargarNotificaciones();
+        notifInterval = setInterval(cargarNotificaciones, 30000);
+
     </script>
 </body>
 </html>

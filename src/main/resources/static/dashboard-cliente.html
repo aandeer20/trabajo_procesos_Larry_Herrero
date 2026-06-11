@@ -61,6 +61,23 @@
         .disponibilidad-numero { font-size:1.8rem; font-weight:bold; color:#c9a84c; }
         .disponibilidad-texto { font-size:0.88rem; color:#555; }
         .disponibilidad-texto.lleno { color:#c62828; font-weight:bold; }
+
+        /* ── Notificaciones ── */
+        .notif-btn { position:relative; background:none; border:none; cursor:pointer; font-size:1.3rem; padding:4px 8px; color:#fff; }
+        .notif-badge { position:absolute; top:0; right:0; background:#c62828; color:#fff; border-radius:50%; font-size:0.65rem; font-weight:bold; min-width:17px; height:17px; display:flex; align-items:center; justify-content:center; padding:0 3px; }
+        .notif-panel { display:none; position:absolute; top:calc(100% + 8px); right:0; width:340px; max-height:420px; background:#fff; border-radius:10px; box-shadow:0 8px 30px rgba(0,0,0,0.18); z-index:1000; overflow:hidden; flex-direction:column; }
+        .notif-panel.open { display:flex; }
+        .notif-panel-header { padding:12px 16px; background:#1a237e; color:#fff; display:flex; justify-content:space-between; align-items:center; font-family:'Georgia',serif; font-size:0.95rem; font-weight:bold; }
+        .notif-panel-header button { background:none; border:1px solid rgba(255,255,255,0.5); color:#fff; border-radius:4px; padding:3px 10px; font-size:0.75rem; cursor:pointer; }
+        .notif-list { overflow-y:auto; flex:1; }
+        .notif-item { padding:12px 16px; border-bottom:1px solid #f0f0f0; cursor:pointer; transition:background 0.15s; }
+        .notif-item:hover { background:#f5f5f5; }
+        .notif-item.no-leida { background:#fff8e1; border-left:3px solid #f57f17; }
+        .notif-item.no-leida:hover { background:#fff3cd; }
+        .notif-msg { font-size:0.88rem; color:#333; line-height:1.4; }
+        .notif-fecha { font-size:0.75rem; color:#999; margin-top:4px; }
+        .notif-empty { padding:24px; text-align:center; color:#aaa; font-size:0.9rem; }
+        .notif-wrapper { position:relative; }
     </style>
 </head>
 <body>
@@ -68,6 +85,21 @@
         <a class="nav-logo" href="index.html">Deusto<span>Restaurant</span></a>
         <div class="dashboard-nav-user">
             <span id="nav-nombre"></span>
+            <div class="notif-wrapper">
+                <button class="notif-btn" id="btn-notif" onclick="toggleNotifPanel()" title="Notificaciones">
+                    🔔
+                    <span class="notif-badge" id="notif-badge" style="display:none">0</span>
+                </button>
+                <div class="notif-panel" id="notif-panel">
+                    <div class="notif-panel-header">
+                        <span>Notificaciones</span>
+                        <button onclick="marcarTodasLeidas()">Marcar todas como leídas</button>
+                    </div>
+                    <div class="notif-list" id="notif-list">
+                        <div class="notif-empty">Sin notificaciones</div>
+                    </div>
+                </div>
+            </div>
             <button class="btn-logout" onclick="cerrarSesion()">Cerrar sesión</button>
         </div>
     </nav>
@@ -274,6 +306,74 @@
         function cerrarSesion() { sessionStorage.removeItem('usuario'); window.location.href = 'login.html'; }
 
         cargarRestaurantes();
+
+        // ── Notificaciones ──────────────────────────────────────
+        let notifInterval = null;
+
+        async function cargarNotificaciones() {
+            try {
+                const res = await fetch(`${API_BASE}/notificaciones/usuario/${usuario.id}`);
+                const lista = await res.json();
+                const noLeidas = lista.filter(n => !n.leida).length;
+
+                const badge = document.getElementById('notif-badge');
+                if (noLeidas > 0) {
+                    badge.textContent = noLeidas > 99 ? '99+' : noLeidas;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+
+                const listEl = document.getElementById('notif-list');
+                if (!lista.length) {
+                    listEl.innerHTML = '<div class="notif-empty">Sin notificaciones</div>';
+                    return;
+                }
+                listEl.innerHTML = lista.map(n => `
+                    <div class="notif-item ${n.leida ? '' : 'no-leida'}" onclick="leerNotif(${n.id}, this)">
+                        <div class="notif-msg">${n.mensaje}</div>
+                        <div class="notif-fecha">${formatearFechaNotif(n.fechaCreacion)}</div>
+                    </div>`).join('');
+            } catch {}
+        }
+
+        function formatearFechaNotif(isoStr) {
+            if (!isoStr) return '';
+            const d = new Date(isoStr);
+            return d.toLocaleDateString('es-ES', { day:'2-digit', month:'short' })
+                + ' ' + d.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
+        }
+
+        async function leerNotif(id, el) {
+            if (el.classList.contains('no-leida')) {
+                await fetch(`${API_BASE}/notificaciones/${id}/leer`, { method: 'PUT' });
+                el.classList.remove('no-leida');
+                cargarNotificaciones();
+            }
+        }
+
+        async function marcarTodasLeidas() {
+            await fetch(`${API_BASE}/notificaciones/usuario/${usuario.id}/leer-todas`, { method: 'PUT' });
+            cargarNotificaciones();
+        }
+
+        function toggleNotifPanel() {
+            const panel = document.getElementById('notif-panel');
+            panel.classList.toggle('open');
+            if (panel.classList.contains('open')) cargarNotificaciones();
+        }
+
+        document.addEventListener('click', function(e) {
+            const wrapper = document.querySelector('.notif-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                document.getElementById('notif-panel').classList.remove('open');
+            }
+        });
+
+        // Poll cada 30 segundos
+        cargarNotificaciones();
+        notifInterval = setInterval(cargarNotificaciones, 30000);
+
     </script>
 </body>
 </html>

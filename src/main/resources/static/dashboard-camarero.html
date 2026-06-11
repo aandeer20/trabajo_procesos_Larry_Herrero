@@ -167,6 +167,21 @@
                     <tr><td colspan="7" class="empty-msg">Selecciona una fecha para ver reservas.</td></tr>
                 </tbody>
             </table>
+
+            <div style="margin-top:2.5rem;">
+                <h3 class="seccion-titulo" style="font-size:1.1rem;color:#c62828;display:flex;align-items:center;gap:8px;">
+                    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f57f17;"></span>
+                    Reservas pendientes de confirmar
+                </h3>
+                <table>
+                    <thead>
+                        <tr><th>Restaurante</th><th>Cliente</th><th>Fecha</th><th>Turno</th><th>Comensales</th><th>Observaciones</th><th></th></tr>
+                    </thead>
+                    <tbody id="tabla-pendientes">
+                        <tr><td colspan="7" class="empty-msg">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </main>
 
@@ -243,7 +258,7 @@
         function cambiarTab(nombre) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === nombre));
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + nombre));
-            if (nombre === 'reservas') cargarReservas();
+            if (nombre === 'reservas') { cargarReservas(); cargarPendientes(); }
         }
 
         async function crearReserva(e) {
@@ -308,6 +323,41 @@
             } catch { tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">Error al cargar.</td></tr>'; }
         }
 
+        async function cargarPendientes() {
+            const filtroRest = document.getElementById('filtro-restaurante').value;
+            const tbody = document.getElementById('tabla-pendientes');
+            const url = filtroRest
+                ? `${API_BASE}/reservas/pendientes/restaurante/${filtroRest}`
+                : `${API_BASE}/reservas/pendientes`;
+            try {
+                const res = await fetch(url);
+                const pendientes = await res.json();
+                if (!pendientes.length) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">No hay reservas pendientes.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = pendientes.map(r => `
+                    <tr>
+                        <td>${r.nombreRestaurante}</td>
+                        <td>${r.nombreCliente}</td>
+                        <td>${r.fecha}</td>
+                        <td>${r.turno}</td>
+                        <td>${r.numComensales}</td>
+                        <td>${r.observaciones || '—'}</td>
+                        <td><button class="btn-editar" onclick="confirmarReserva(${r.id})">Confirmar</button></td>
+                    </tr>`).join('');
+            } catch { tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">Error al cargar.</td></tr>'; }
+        }
+
+        async function confirmarReserva(id) {
+            await fetch(`${API_BASE}/reservas/${id}/estado`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ estado: 'CONFIRMADA' })
+            });
+            cargarReservas();
+            cargarPendientes();
+        }
+
         function abrirModal(id, estadoActual) {
             reservaEditandoId = id;
             document.getElementById('nuevo-estado').value = estadoActual;
@@ -324,6 +374,7 @@
             });
             cerrarModal();
             cargarReservas();
+            cargarPendientes();
         }
 
         function cerrarSesion() { sessionStorage.removeItem('usuario'); window.location.href = 'login.html'; }
