@@ -5,7 +5,7 @@ import com.deustoRestaurant.DRestaurant.dao.UsuarioDAO;
 import com.deustoRestaurant.DRestaurant.dto.RestauranteRequestDTO;
 import com.deustoRestaurant.DRestaurant.dto.RestauranteResponseDTO;
 import com.deustoRestaurant.DRestaurant.entity.Restaurante;
-import com.deustoRestaurant.DRestaurant.entity.Rol;
+import com.deustoRestaurant.DRestaurant.entity.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -32,6 +32,12 @@ public class RestauranteService {
      * @throws RuntimeException si el gerente indicado no existe
      */
     public RestauranteResponseDTO crear(RestauranteRequestDTO dto) {
+        Usuario gerente = null;
+        if (dto.getGerenteId() != null) {
+            gerente = usuarioDAO.findById(dto.getGerenteId())
+                    .orElseThrow(() -> new RuntimeException("Gerente no encontrado"));
+        }
+
         Restaurante restaurante = new Restaurante();
         restaurante.setNombre(dto.getNombre());
         restaurante.setDireccion(dto.getDireccion());
@@ -41,13 +47,14 @@ public class RestauranteService {
         restaurante.setAforoMaximoComida(dto.getAforoMaximoComida());
         restaurante.setAforoMaximoCena(dto.getAforoMaximoCena());
         restaurante.setActivo(true);
+        if (gerente != null) {
+            restaurante.setGerente(gerente);
+        }
         Restaurante saved = restauranteDAO.save(restaurante);
 
-        if (dto.getGerenteId() != null) {
-            usuarioDAO.findById(dto.getGerenteId()).ifPresent(gerente -> {
-                gerente.setRestaurante(saved);
-                usuarioDAO.save(gerente);
-            });
+        if (gerente != null) {
+            gerente.setRestaurante(saved);
+            usuarioDAO.save(gerente);
         }
         return toDTO(saved);
     }
@@ -138,8 +145,7 @@ public class RestauranteService {
     }
 
     /**
-     * Convierte una entidad {@link Restaurante} en su DTO de respuesta,
-     * incluyendo la lista de gerentes activos asignados.
+     * Convierte una entidad {@link Restaurante} en su DTO de respuesta.
      *
      * @param r entidad a convertir
      * @return DTO con los datos públicos del restaurante
@@ -155,12 +161,9 @@ public class RestauranteService {
         dto.setAforoMaximoComida(r.getAforoMaximoComida());
         dto.setAforoMaximoCena(r.getAforoMaximoCena());
         dto.setActivo(r.isActivo());
-        List<String> gerentes = usuarioDAO.findByRolAndActivo(Rol.GERENTE, true)
-                .stream()
-                .filter(u -> u.getRestaurante() != null && u.getRestaurante().getId().equals(r.getId()))
-                .map(u -> u.getNombre() + " " + (u.getApellidos() != null ? u.getApellidos() : ""))
-                .collect(Collectors.toList());
-        dto.setGerentes(gerentes);
+        if (r.getGerente() != null) {
+            dto.setNombreGerente(r.getGerente().getNombre());
+        }
         return dto;
     }
 }

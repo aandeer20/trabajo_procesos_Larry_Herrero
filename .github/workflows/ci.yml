@@ -10,6 +10,9 @@ permissions:
   checks: write
   pull-requests: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   test:
     name: Ejecutar Tests y Generar Cobertura
@@ -34,9 +37,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
       - name: Compilar el proyecto
-        run: ./gradlew classes --no-daemon
+        run: ./gradlew classes --no-daemon --stacktrace
       - name: Ejecutar tests y generar informe JaCoCo
-        run: ./gradlew test jacocoTestReport --no-daemon
+        run: ./gradlew test jacocoTestReport --no-daemon --stacktrace
       - name: Verificar umbral mínimo de cobertura (70%)
         run: ./gradlew jacocoTestCoverageVerification --no-daemon
       - name: Publicar resultados de los tests
