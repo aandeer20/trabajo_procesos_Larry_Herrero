@@ -4,6 +4,12 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate;
 
+/**
+ * Entidad que representa una reserva de mesa en un restaurante.
+ * Vincula a un cliente, un restaurante y opcionalmente un camarero,
+ * para una fecha y turno concretos.
+ */
+
 @Entity
 @Data
 @Table(name = "reservas")

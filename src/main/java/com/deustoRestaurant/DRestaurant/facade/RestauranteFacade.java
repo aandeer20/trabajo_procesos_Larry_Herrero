@@ -10,6 +10,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+/**
+ * Controlador REST para la gestión de restaurantes.
+ * Expone endpoints para crear, actualizar, consultar y desactivar restaurantes,
+ * así como para modificar los aforos de comida y cena.
+ * Base URL: {@code /api/restaurantes}
+ */
+
 @RestController
 @RequestMapping("/api/restaurantes")
 public class RestauranteFacade {

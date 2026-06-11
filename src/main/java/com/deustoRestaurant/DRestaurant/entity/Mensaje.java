@@ -4,6 +4,11 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+/**
+ * Entidad que representa un mensaje interno entre dos usuarios.
+ * Almacena el contenido, la fecha de creación y el estado de lectura.
+ */
+
 @Entity
 @Data
 @Table(name = "mensajes")

@@ -4,6 +4,12 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.util.List;
 
+/**
+ * Entidad que representa un restaurante del sistema.
+ * Contiene información de contacto, horarios, aforos por turno
+ * y las relaciones con su gerente, camareros y reservas.
+ */
+
 @Entity
 @Data
 @Table(name = "restaurantes")

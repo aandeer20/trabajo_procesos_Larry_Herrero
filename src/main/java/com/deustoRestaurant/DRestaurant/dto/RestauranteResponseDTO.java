@@ -1,5 +1,7 @@
 package com.deustoRestaurant.DRestaurant.dto;
 
+import java.util.List;
+
 import lombok.Data;
 
 @Data
@@ -14,6 +16,7 @@ public class RestauranteResponseDTO {
     private int aforoMaximoCena;
     private boolean activo;
     private String nombreGerente;
+    private List<String> gerentes;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -35,4 +38,6 @@ public class RestauranteResponseDTO {
     public void setActivo(boolean activo) { this.activo = activo; }
     public String getNombreGerente() { return nombreGerente; }
     public void setNombreGerente(String nombreGerente) { this.nombreGerente = nombreGerente; }
+    public List<String> getGerentes() { return gerentes; }
+    public void setGerentes(List<String> gerentes) { this.gerentes = gerentes; }
 }

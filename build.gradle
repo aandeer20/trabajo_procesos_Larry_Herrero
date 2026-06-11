@@ -71,3 +71,13 @@ jacocoTestCoverageVerification {
 		}
 	}
 }
+
+javadoc {
+    options.encoding = 'UTF-8'
+    options.locale = 'es'
+    options.windowTitle = 'DeustoRestaurant API'
+    options.docTitle = 'DeustoRestaurant - Documentación'
+    options.author = true
+    options.version = true
+    failOnError = false
+}

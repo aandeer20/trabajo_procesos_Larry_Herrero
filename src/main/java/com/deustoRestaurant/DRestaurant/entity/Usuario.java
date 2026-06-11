@@ -3,6 +3,12 @@ package com.deustoRestaurant.DRestaurant.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+/**
+ * Entidad que representa a un usuario del sistema.
+ * Puede tener el rol de {@link Rol#CLIENTE}, {@link Rol#CAMARERO}
+ * o {@link Rol#GERENTE} y puede estar asociado a un {@link Restaurante}.
+ */
+
 @Entity
 @Data
 @Table(name = "usuarios")

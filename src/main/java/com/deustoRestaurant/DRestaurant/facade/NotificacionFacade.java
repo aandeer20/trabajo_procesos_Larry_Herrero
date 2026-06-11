@@ -7,6 +7,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controlador REST para la gestión de notificaciones internas.
+ * Permite consultar notificaciones, contar las no leídas
+ * y marcarlas como leídas de forma individual o masiva.
+ * Base URL: {@code /api/notificaciones}
+ */
+
 @RestController
 @RequestMapping("/api/notificaciones")
 public class NotificacionFacade {

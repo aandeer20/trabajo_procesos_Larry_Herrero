@@ -9,6 +9,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+/**
+ * Controlador REST para la mensajería interna entre usuarios.
+ * Expone endpoints para enviar mensajes, consultar recibidos,
+ * obtener no leídos, ver conversaciones y marcar mensajes como leídos.
+ * Base URL: {@code /api/mensajes}
+ */
+
 @RestController
 @RequestMapping("/api/mensajes")
 public class MensajeFacade {

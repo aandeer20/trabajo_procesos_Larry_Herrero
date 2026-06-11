@@ -7,6 +7,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Repositorio JPA para la entidad {@link Reserva}.
+ * Proporciona consultas por cliente, restaurante, camarero, fecha, turno y estado.
+ */
+
 public interface ReservaDAO extends JpaRepository<Reserva, Long> {
     List<Reserva> findByClienteId(Long clienteId);
     List<Reserva> findByRestauranteId(Long restauranteId);
