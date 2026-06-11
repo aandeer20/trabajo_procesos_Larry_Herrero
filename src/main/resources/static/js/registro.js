@@ -1,8 +1,4 @@
 // Redirige si ya hay sesión activa
-const usuarioGuardado = sessionStorage.getItem('usuario');
-if (usuarioGuardado) {
-    window.location.href = 'dashboard-cliente.html';
-}
 
 async function submitRegistro(e) {
     e.preventDefault();
