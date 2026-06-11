@@ -5,10 +5,10 @@ if (usuarioGuardado) {
 }
 
 function redirigirPorRol(rol) {
-    if (rol === 'CLIENTE')   window.location.href = 'dashboard-cliente.html';
+    if (rol === 'CLIENTE')       window.location.href = 'dashboard-cliente.html';
     else if (rol === 'CAMARERO') window.location.href = 'dashboard-camarero.html';
     else if (rol === 'GERENTE')  window.location.href = 'dashboard-gerente.html';
-    else window.location.href = 'dashboard.html';
+    else                         window.location.href = 'dashboard.html';
 }
 
 async function submitLogin(e) {
@@ -19,8 +19,10 @@ async function submitLogin(e) {
     errorEl.textContent = '';
 
     try {
-        const res = await fetch(`${API_BASE}/usuarios/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`, {
-            method: 'POST'
+        const res = await fetch(`${API_BASE}/usuarios/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
         });
 
         if (res.status === 400 || res.status === 404) {
