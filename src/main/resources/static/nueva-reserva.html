@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Reserva — DeustoRestaurant</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <style>
+        .reserva-container {
+            max-width: 600px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+
+        .reserva-container h1 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+
+        .reserva-container h1 span {
+            color: #c9a84c;
+        }
+
+        .reserva-container .subtitle {
+            color: #888;
+            margin-bottom: 40px;
+            font-size: 1rem;
+        }
+
+        .reserva-card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+        }
+
+        .disponibilidad-info {
+            background: #faf8f5;
+            border-radius: 6px;
+            padding: 16px 20px;
+            margin-top: 8px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .disponibilidad-info.visible {
+            display: flex;
+        }
+
+        .disponibilidad-numero {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #c9a84c;
+        }
+
+        .disponibilidad-texto {
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .disponibilidad-texto.lleno {
+            color: #c62828;
+            font-weight: bold;
+        }
+
+        .btn-volver {
+            display: inline-block;
+            margin-top: 20px;
+            color: #c9a84c;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: underline;
+            background: none;
+            border: none;
+            font-family: 'Georgia', serif;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a class="nav-logo" href="index.html">Deusto<span>Restaurant</span></a>
+        <div class="dashboard-nav-user">
+            <span id="nav-nombre"></span>
+            <button class="btn-logout" onclick="cerrarSesion()">Cerrar sesión</button>
+        </div>
+    </nav>
+
+    <main class="reserva-container">
+        <h1>Nueva <span>Reserva</span></h1>
+        <p class="subtitle">Elige restaurante, fecha y turno para hacer tu reserva.</p>
+
+        <div class="reserva-card">
+            <form id="form-reserva" onsubmit="submitReserva(event)">
+
+                <div class="form-group">
+                    <label>Restaurante</label>
+                    <select id="restaurante" required onchange="comprobarDisponibilidad()">
+                        <option value="">Selecciona un restaurante...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Fecha</label>
+                    <input type="date" id="fecha" required onchange="comprobarDisponibilidad()">
+                </div>
+
+                <div class="form-group">
+                    <label>Turno</label>
+                    <select id="turno" required onchange="comprobarDisponibilidad()">
+                        <option value="">Selecciona un turno...</option>
+                        <option value="COMIDA">🍽 Comida (13:00 - 16:00)</option>
+                        <option value="CENA">🌙 Cena (20:00 - 23:00)</option>
+                    </select>
+                </div>
+
+                <div class="disponibilidad-info" id="disponibilidad-info">
+                    <div class="disponibilidad-numero" id="plazas-numero">—</div>
+                    <div class="disponibilidad-texto" id="plazas-texto">plazas disponibles</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Número de comensales</label>
+                    <input type="number" id="comensales" min="1" max="20" placeholder="¿Cuántas personas?" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Observaciones (opcional)</label>
+                    <input type="text" id="observaciones" placeholder="Alergias, ocasión especial...">
+                </div>
+
+                <p class="error-msg" id="reserva-error"></p>
+                <button type="submit" class="btn-submit">Confirmar reserva</button>
+            </form>
+
+            <button class="btn-volver" onclick="volverDashboard()">← Volver al inicio</button>
+        </div>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script>
+        const usuario = JSON.parse(sessionStorage.getItem('usuario'));
+        if (!usuario) window.location.href = 'login.html';
+
+        document.getElementById('nav-nombre').textContent = usuario.nombre + ' ' + (usuario.apellidos || '');
+
+        // Fecha mínima: hoy
+        const hoy = new Date().toISOString().split('T')[0];
+        document.getElementById('fecha').min = hoy;
+        document.getElementById('fecha').value = hoy;
+
+        // Cargar restaurantes
+        async function cargarRestaurantes() {
+            try {
+                const res = await fetch(`${API_BASE}/restaurantes/activos`);
+                const restaurantes = await res.json();
+                const select = document.getElementById('restaurante');
+                restaurantes.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.id;
+                    opt.textContent = `${r.nombre} — ${r.direccion || ''}`;
+                    opt.dataset.aforoComida = r.aforoMaximoComida;
+                    opt.dataset.aforoCena = r.aforoMaximoCena;
+                    select.appendChild(opt);
+                });
+            } catch (e) {
+                console.error('Error cargando restaurantes:', e);
+            }
+        }
+
+        async function comprobarDisponibilidad() {
+            const restauranteId = document.getElementById('restaurante').value;
+            const fecha = document.getElementById('fecha').value;
+            const turno = document.getElementById('turno').value;
+
+            if (!restauranteId || !fecha || !turno) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/reservas/turno?restauranteId=${restauranteId}&fecha=${fecha}&turno=${turno}`);
+                const reservas = await res.json();
+
+                const select = document.getElementById('restaurante');
+                const opt = select.options[select.selectedIndex];
+                const aforoMax = turno === 'COMIDA'
+                    ? parseInt(opt.dataset.aforoComida)
+                    : parseInt(opt.dataset.aforoCena);
+
+                const ocupadas = reservas
+                    .filter(r => r.estado !== 'CANCELADA')
+                    .reduce((acc, r) => acc + r.numComensales, 0);
+                const libres = Math.max(0, aforoMax - ocupadas);
+
+                const infoEl = document.getElementById('disponibilidad-info');
+                const numEl = document.getElementById('plazas-numero');
+                const textoEl = document.getElementById('plazas-texto');
+
+                numEl.textContent = libres;
+                infoEl.classList.add('visible');
+
+                if (libres === 0) {
+                    textoEl.textContent = 'Sin plazas disponibles para este turno';
+                    textoEl.className = 'disponibilidad-texto lleno';
+                } else {
+                    textoEl.textContent = `plazas disponibles de ${aforoMax}`;
+                    textoEl.className = 'disponibilidad-texto';
+                }
+
+                document.getElementById('comensales').max = libres;
+
+            } catch (e) {
+                console.error('Error comprobando disponibilidad:', e);
+            }
+        }
+
+        async function submitReserva(e) {
+            e.preventDefault();
+            const errorEl = document.getElementById('reserva-error');
+            errorEl.textContent = '';
+
+            const body = {
+                restauranteId: parseInt(document.getElementById('restaurante').value),
+                fecha: document.getElementById('fecha').value,
+                turno: document.getElementById('turno').value,
+                numComensales: parseInt(document.getElementById('comensales').value),
+                observaciones: document.getElementById('observaciones').value,
+                clienteId: usuario.id
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/reservas`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                if (res.status === 400) {
+                    errorEl.textContent = 'Aforo completo para ese turno. Elige otra fecha o turno.';
+                    return;
+                }
+                if (!res.ok) {
+                    errorEl.textContent = 'Error al crear la reserva. Inténtalo de nuevo.';
+                    return;
+                }
+
+                alert('¡Reserva confirmada!');
+                volverDashboard();
+
+            } catch (e) {
+                errorEl.textContent = 'No se pudo conectar con el servidor.';
+            }
+        }
+
+        function volverDashboard() {
+            if (usuario.rol === 'CLIENTE')       window.location.href = 'dashboard-cliente.html';
+            else if (usuario.rol === 'CAMARERO') window.location.href = 'dashboard-camarero.html';
+            else if (usuario.rol === 'GERENTE')  window.location.href = 'dashboard-gerente.html';
+            else window.location.href = 'dashboard.html';
+        }
+
+        cargarRestaurantes();
+    </script>
+</body>
+</html>

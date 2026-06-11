@@ -65,8 +65,6 @@
         }
         .btn-editar:hover { background:#1565c0; color:#fff; }
         .seccion-titulo { font-size:1.3rem; color:#1a1a1a; margin-bottom:24px; border-bottom:2px solid #c9a84c; padding-bottom:8px; }
-
-        /* Modal */
         .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; justify-content:center; align-items:center; }
         .modal-overlay.open { display:flex; }
         .modal { background:#fff; border-radius:8px; padding:36px; width:100%; max-width:400px; box-shadow:0 8px 40px rgba(0,0,0,0.2); }
@@ -102,6 +100,12 @@
                 <h2 class="seccion-titulo">Nueva reserva</h2>
                 <form id="form-reserva" onsubmit="crearReserva(event)">
                     <div class="form-grid">
+                        <div class="form-group full">
+                            <label>Restaurante</label>
+                            <select id="res-restaurante" required onchange="actualizarRestaurante()">
+                                <option value="">Selecciona un restaurante...</option>
+                            </select>
+                        </div>
                         <div class="form-group full">
                             <label>Cliente</label>
                             <select id="res-cliente" required>
@@ -141,6 +145,10 @@
         <div class="tab-panel" id="tab-reservas">
             <h2 class="seccion-titulo">Reservas del restaurante</h2>
             <div class="filtros">
+                <label>Restaurante:</label>
+                <select id="filtro-restaurante" onchange="cargarReservas()">
+                    <option value="">Todos</option>
+                </select>
                 <label>Fecha:</label>
                 <input type="date" id="filtro-fecha">
                 <label>Turno:</label>
@@ -153,10 +161,10 @@
             </div>
             <table>
                 <thead>
-                    <tr><th>Cliente</th><th>Fecha</th><th>Turno</th><th>Comensales</th><th>Estado</th><th></th></tr>
+                    <tr><th>Restaurante</th><th>Cliente</th><th>Fecha</th><th>Turno</th><th>Comensales</th><th>Estado</th><th></th></tr>
                 </thead>
                 <tbody id="tabla-reservas">
-                    <tr><td colspan="6" class="empty-msg">Selecciona una fecha para ver reservas.</td></tr>
+                    <tr><td colspan="7" class="empty-msg">Selecciona una fecha para ver reservas.</td></tr>
                 </tbody>
             </table>
         </div>
@@ -194,12 +202,27 @@
 
         let restauranteId = null;
         let reservaEditandoId = null;
+        let todosRestaurantes = [];
 
         async function init() {
             try {
                 const r = await fetch(`${API_BASE}/restaurantes/activos`);
-                const lista = await r.json();
-                if (lista.length) restauranteId = lista[0].id;
+                todosRestaurantes = await r.json();
+
+                const selRest = document.getElementById('res-restaurante');
+                const filtroRest = document.getElementById('filtro-restaurante');
+                todosRestaurantes.forEach(rest => {
+                    const opt1 = document.createElement('option');
+                    opt1.value = rest.id;
+                    opt1.textContent = rest.nombre + (rest.direccion ? ' — ' + rest.direccion : '');
+                    selRest.appendChild(opt1);
+
+                    const opt2 = document.createElement('option');
+                    opt2.value = rest.id;
+                    opt2.textContent = rest.nombre;
+                    filtroRest.appendChild(opt2);
+                });
+                if (todosRestaurantes.length) restauranteId = todosRestaurantes[0].id;
 
                 const rc = await fetch(`${API_BASE}/usuarios/rol/CLIENTE`);
                 const clientes = await rc.json();
@@ -213,6 +236,10 @@
             } catch(e) { console.error(e); }
         }
 
+        function actualizarRestaurante() {
+            restauranteId = parseInt(document.getElementById('res-restaurante').value);
+        }
+
         function cambiarTab(nombre) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === nombre));
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + nombre));
@@ -224,7 +251,7 @@
             const errorEl = document.getElementById('res-error');
             const okEl    = document.getElementById('res-ok');
             errorEl.textContent = ''; okEl.textContent = '';
-            if (!restauranteId) { errorEl.textContent = 'No hay restaurante disponible.'; return; }
+            if (!restauranteId) { errorEl.textContent = 'Selecciona un restaurante.'; return; }
 
             const body = {
                 fecha: document.getElementById('res-fecha').value,
@@ -247,21 +274,30 @@
         }
 
         async function cargarReservas() {
-            if (!restauranteId) return;
             const tbody = document.getElementById('tabla-reservas');
-            tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Cargando...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">Cargando...</td></tr>';
             try {
-                const fecha  = document.getElementById('filtro-fecha').value;
-                const turno  = document.getElementById('filtro-turno').value;
-                let url = `${API_BASE}/reservas/restaurante/${restauranteId}`;
-                const res = await fetch(url);
-                let reservas = await res.json();
-                if (fecha)  reservas = reservas.filter(r => r.fecha === fecha);
-                if (turno)  reservas = reservas.filter(r => r.turno === turno);
+                const filtroRestId = document.getElementById('filtro-restaurante').value;
+                const fecha = document.getElementById('filtro-fecha').value;
+                const turno = document.getElementById('filtro-turno').value;
 
-                if (!reservas.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">No hay reservas para ese filtro.</td></tr>'; return; }
+                let reservas = [];
+                if (filtroRestId) {
+                    const res = await fetch(`${API_BASE}/reservas/restaurante/${filtroRestId}`);
+                    reservas = await res.json();
+                } else {
+                    const promesas = todosRestaurantes.map(r => fetch(`${API_BASE}/reservas/restaurante/${r.id}`).then(r => r.json()));
+                    const resultados = await Promise.all(promesas);
+                    reservas = resultados.flat();
+                }
+
+                if (fecha) reservas = reservas.filter(r => r.fecha === fecha);
+                if (turno) reservas = reservas.filter(r => r.turno === turno);
+
+                if (!reservas.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">No hay reservas para ese filtro.</td></tr>'; return; }
                 tbody.innerHTML = reservas.map(r => `
                     <tr>
+                        <td>${r.nombreRestaurante || '—'}</td>
                         <td>${r.nombreCliente || '—'}</td>
                         <td>${r.fecha}</td>
                         <td>${r.turno === 'COMIDA' ? '🍽 Comida' : '🌙 Cena'}</td>
@@ -269,7 +305,7 @@
                         <td><span class="badge badge-${r.estado.toLowerCase()}">${r.estado}</span></td>
                         <td><button class="btn-editar" onclick="abrirModal(${r.id}, '${r.estado}')">Editar estado</button></td>
                     </tr>`).join('');
-            } catch { tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Error al cargar.</td></tr>'; }
+            } catch { tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">Error al cargar.</td></tr>'; }
         }
 
         function abrirModal(id, estadoActual) {

@@ -53,6 +53,14 @@
         }
         .btn-cancelar:hover { background:#c62828; color:#fff; }
         .seccion-titulo { font-size:1.3rem; color:#1a1a1a; margin-bottom:24px; border-bottom:2px solid #c9a84c; padding-bottom:8px; }
+        .disponibilidad-info {
+            background:#faf8f5; border-radius:6px; padding:12px 16px;
+            display:none; align-items:center; gap:12px; margin-bottom:8px;
+        }
+        .disponibilidad-info.visible { display:flex; }
+        .disponibilidad-numero { font-size:1.8rem; font-weight:bold; color:#c9a84c; }
+        .disponibilidad-texto { font-size:0.88rem; color:#555; }
+        .disponibilidad-texto.lleno { color:#c62828; font-weight:bold; }
     </style>
 </head>
 <body>
@@ -77,17 +85,29 @@
                 <h2 class="seccion-titulo">Nueva reserva</h2>
                 <form id="form-reserva" onsubmit="crearReserva(event)">
                     <div class="form-grid">
+                        <div class="form-group full">
+                            <label>Restaurante</label>
+                            <select id="res-restaurante" required onchange="comprobarDisponibilidad()">
+                                <option value="">Selecciona un restaurante...</option>
+                            </select>
+                        </div>
                         <div class="form-group">
                             <label>Fecha</label>
-                            <input type="date" id="res-fecha" required>
+                            <input type="date" id="res-fecha" required onchange="comprobarDisponibilidad()">
                         </div>
                         <div class="form-group">
                             <label>Turno</label>
-                            <select id="res-turno" required>
+                            <select id="res-turno" required onchange="comprobarDisponibilidad()">
                                 <option value="">— Selecciona —</option>
                                 <option value="COMIDA">🍽 Comida (13:00 – 16:00)</option>
                                 <option value="CENA">🌙 Cena (20:00 – 23:00)</option>
                             </select>
+                        </div>
+                        <div class="form-group full">
+                            <div class="disponibilidad-info" id="disp-info">
+                                <div class="disponibilidad-numero" id="disp-numero">—</div>
+                                <div class="disponibilidad-texto" id="disp-texto">plazas disponibles</div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Número de comensales</label>
@@ -111,10 +131,10 @@
             <h2 class="seccion-titulo">Mis reservas</h2>
             <table>
                 <thead>
-                    <tr><th>Fecha</th><th>Turno</th><th>Comensales</th><th>Estado</th><th></th></tr>
+                    <tr><th>Restaurante</th><th>Fecha</th><th>Turno</th><th>Comensales</th><th>Estado</th><th></th></tr>
                 </thead>
                 <tbody id="tabla-reservas">
-                    <tr><td colspan="5" class="empty-msg">Cargando...</td></tr>
+                    <tr><td colspan="6" class="empty-msg">Cargando...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -128,6 +148,64 @@
         document.getElementById('nav-nombre').textContent = usuario.nombre + ' ' + (usuario.apellidos || '');
         document.getElementById('bienvenida-nombre').textContent = usuario.nombre;
         document.getElementById('res-fecha').min = new Date().toISOString().split('T')[0];
+        document.getElementById('res-fecha').value = new Date().toISOString().split('T')[0];
+
+        let restaurantes = [];
+
+        async function cargarRestaurantes() {
+            try {
+                const res = await fetch(`${API_BASE}/restaurantes/activos`);
+                restaurantes = await res.json();
+                const select = document.getElementById('res-restaurante');
+                restaurantes.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.id;
+                    opt.textContent = r.nombre + (r.direccion ? ' — ' + r.direccion : '');
+                    opt.dataset.aforoComida = r.aforoMaximoComida;
+                    opt.dataset.aforoCena = r.aforoMaximoCena;
+                    select.appendChild(opt);
+                });
+            } catch (e) { console.error('Error cargando restaurantes:', e); }
+        }
+
+        async function comprobarDisponibilidad() {
+            const restauranteId = document.getElementById('res-restaurante').value;
+            const fecha = document.getElementById('res-fecha').value;
+            const turno = document.getElementById('res-turno').value;
+            if (!restauranteId || !fecha || !turno) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/reservas/turno?restauranteId=${restauranteId}&fecha=${fecha}&turno=${turno}`);
+                const reservas = await res.json();
+
+                const select = document.getElementById('res-restaurante');
+                const opt = select.options[select.selectedIndex];
+                const aforoMax = turno === 'COMIDA'
+                    ? parseInt(opt.dataset.aforoComida)
+                    : parseInt(opt.dataset.aforoCena);
+
+                const ocupadas = reservas
+                    .filter(r => r.estado !== 'CANCELADA')
+                    .reduce((acc, r) => acc + r.numComensales, 0);
+                const libres = Math.max(0, aforoMax - ocupadas);
+
+                const infoEl  = document.getElementById('disp-info');
+                const numEl   = document.getElementById('disp-numero');
+                const textoEl = document.getElementById('disp-texto');
+
+                numEl.textContent = libres;
+                infoEl.classList.add('visible');
+
+                if (libres === 0) {
+                    textoEl.textContent = 'Sin plazas disponibles para este turno';
+                    textoEl.className = 'disponibilidad-texto lleno';
+                } else {
+                    textoEl.textContent = `plazas disponibles de ${aforoMax}`;
+                    textoEl.className = 'disponibilidad-texto';
+                }
+                document.getElementById('res-comensales').max = libres;
+            } catch (e) { console.error('Error disponibilidad:', e); }
+        }
 
         function cambiarTab(nombre) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === nombre));
@@ -141,21 +219,13 @@
             const okEl    = document.getElementById('res-ok');
             errorEl.textContent = ''; okEl.textContent = '';
 
-            let restauranteId;
-            try {
-                const r = await fetch(`${API_BASE}/restaurantes/activos`);
-                const lista = await r.json();
-                if (!lista.length) { errorEl.textContent = 'No hay restaurantes disponibles.'; return; }
-                restauranteId = lista[0].id;
-            } catch { errorEl.textContent = 'Error al conectar con el servidor.'; return; }
-
             const body = {
                 fecha: document.getElementById('res-fecha').value,
                 turno: document.getElementById('res-turno').value,
                 numComensales: parseInt(document.getElementById('res-comensales').value),
                 observaciones: document.getElementById('res-obs').value.trim(),
                 clienteId: usuario.id,
-                restauranteId
+                restauranteId: parseInt(document.getElementById('res-restaurante').value)
             };
 
             try {
@@ -167,18 +237,24 @@
                 okEl.textContent = '¡Reserva creada con éxito!';
                 document.getElementById('form-reserva').reset();
                 document.getElementById('res-fecha').min = new Date().toISOString().split('T')[0];
+                document.getElementById('res-fecha').value = new Date().toISOString().split('T')[0];
+                cargarRestaurantes();
             } catch { errorEl.textContent = 'No se pudo conectar con el servidor.'; }
         }
 
         async function cargarMisReservas() {
             const tbody = document.getElementById('tabla-reservas');
-            tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Cargando...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Cargando...</td></tr>';
             try {
                 const res = await fetch(`${API_BASE}/reservas/cliente/${usuario.id}`);
                 const reservas = await res.json();
-                if (!reservas.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">No tienes reservas aún.</td></tr>'; return; }
+                if (!reservas.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">No tienes reservas aún.</td></tr>';
+                    return;
+                }
                 tbody.innerHTML = reservas.map(r => `
                     <tr>
+                        <td>${r.nombreRestaurante || '—'}</td>
                         <td>${r.fecha}</td>
                         <td>${r.turno === 'COMIDA' ? '🍽 Comida' : '🌙 Cena'}</td>
                         <td>${r.numComensales} personas</td>
@@ -186,7 +262,7 @@
                         <td>${(r.estado === 'PENDIENTE' || r.estado === 'CONFIRMADA')
                             ? `<button class="btn-cancelar" onclick="cancelar(${r.id})">Cancelar</button>` : ''}</td>
                     </tr>`).join('');
-            } catch { tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Error al cargar.</td></tr>'; }
+            } catch { tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Error al cargar.</td></tr>'; }
         }
 
         async function cancelar(id) {
@@ -196,6 +272,8 @@
         }
 
         function cerrarSesion() { sessionStorage.removeItem('usuario'); window.location.href = 'login.html'; }
+
+        cargarRestaurantes();
     </script>
 </body>
 </html>
