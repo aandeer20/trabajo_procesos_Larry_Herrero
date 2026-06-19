@@ -3,6 +3,9 @@ package com.deustoRestaurant.DRestaurant.dto;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+/**
+ * DTO de respuesta con los datos de un mensaje interno entre usuarios.
+ */
 @Data
 public class MensajeResponseDTO {
     private Long id;

@@ -37,14 +37,38 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 	finalizedBy jacocoTestReport
+	doLast {
+		def report = file("${buildDir}/reports/tests/test/index.html")
+		if (report.exists()) exec { commandLine 'cmd', '/c', 'start', report.absolutePath }
+	}
+}
+
+task testUnit(type: Test) {
+	description = 'Ejecuta solo los tests unitarios (@Tag("unit"))'
+	group = 'verification'
+	useJUnitPlatform {
+		includeTags 'unit'
+	}
+}
+
+task testIntegracion(type: Test) {
+	description = 'Ejecuta solo los tests de integración (@Tag("integration"))'
+	group = 'verification'
+	useJUnitPlatform {
+		includeTags 'integration'
+	}
 }
 
 jacoco {
-	toolVersion = "0.8.11"
+	toolVersion = "0.8.13"
 }
 
 jacocoTestReport {
 	dependsOn test
+	doLast {
+		def report = file("${buildDir}/reports/jacoco/html/index.html")
+		if (report.exists()) exec { commandLine 'cmd', '/c', 'start', report.absolutePath }
+	}
 	reports {
 		xml.required = true
 		xml.outputLocation = layout.buildDirectory.file('reports/jacoco/xml/jacocoTestReport.xml')
@@ -75,11 +99,16 @@ jacocoTestCoverageVerification {
 }
 
 javadoc {
+	doLast {
+		def report = file("${buildDir}/docs/javadoc/index.html")
+		if (report.exists()) exec { commandLine 'cmd', '/c', 'start', report.absolutePath }
+	}
     options.encoding = 'UTF-8'
     options.locale = 'es'
     options.windowTitle = 'DeustoRestaurant API'
     options.docTitle = 'DeustoRestaurant - Documentación'
     options.author = true
     options.version = true
+    options.addStringOption('Xdoclint:none', '-quiet')
     failOnError = false
 }

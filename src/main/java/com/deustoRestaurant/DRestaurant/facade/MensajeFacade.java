@@ -23,6 +23,12 @@ public class MensajeFacade {
     @Autowired
     private MensajeService mensajeService;
 
+    /**
+     * Envía un nuevo mensaje interno entre usuarios.
+     *
+     * @param dto datos del mensaje (contenido, remitente, destinatario)
+     * @return el mensaje creado con estado 201, o 404 si algún usuario no existe
+     */
     @PostMapping
     public ResponseEntity<MensajeResponseDTO> enviar(@RequestBody MensajeRequestDTO dto) {
         try {
@@ -32,16 +38,35 @@ public class MensajeFacade {
         }
     }
 
+    /**
+     * Devuelve todos los mensajes recibidos por un usuario.
+     *
+     * @param destinatarioId identificador del destinatario
+     * @return lista de mensajes recibidos
+     */
     @GetMapping("/recibidos/{destinatarioId}")
     public List<MensajeResponseDTO> obtenerRecibidos(@PathVariable Long destinatarioId) {
         return mensajeService.obtenerRecibidos(destinatarioId);
     }
 
+    /**
+     * Devuelve los mensajes no leídos de un usuario.
+     *
+     * @param destinatarioId identificador del destinatario
+     * @return lista de mensajes pendientes de leer
+     */
     @GetMapping("/noleidos/{destinatarioId}")
     public List<MensajeResponseDTO> obtenerNoLeidos(@PathVariable Long destinatarioId) {
         return mensajeService.obtenerNoLeidos(destinatarioId);
     }
 
+    /**
+     * Devuelve la conversación entre dos usuarios.
+     *
+     * @param remitenteId    identificador del remitente
+     * @param destinatarioId identificador del destinatario
+     * @return lista de mensajes entre ambos usuarios
+     */
     @GetMapping("/conversacion")
     public List<MensajeResponseDTO> obtenerConversacion(
             @RequestParam Long remitenteId,
@@ -49,6 +74,12 @@ public class MensajeFacade {
         return mensajeService.obtenerConversacion(remitenteId, destinatarioId);
     }
 
+    /**
+     * Marca un mensaje como leído.
+     *
+     * @param id identificador del mensaje
+     * @return el mensaje actualizado
+     */
     @PutMapping("/{id}/leido")
     public MensajeResponseDTO marcarLeido(@PathVariable Long id) {
         return mensajeService.marcarLeido(id);

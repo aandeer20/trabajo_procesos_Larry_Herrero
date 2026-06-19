@@ -10,6 +10,11 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 
+/**
+ * Inicializador de datos de prueba para el entorno de desarrollo.
+ * Se ejecuta al arrancar la aplicación (excepto en el perfil {@code test})
+ * y crea usuarios, restaurantes y reservas de ejemplo.
+ */
 @Component
 @Profile("!test")
 public class DataInitializer implements CommandLineRunner {

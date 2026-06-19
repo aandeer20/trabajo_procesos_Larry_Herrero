@@ -7,6 +7,7 @@ import com.deustoRestaurant.DRestaurant.dto.ReservaRequestDTO;
 import com.deustoRestaurant.DRestaurant.dto.ReservaResponseDTO;
 import com.deustoRestaurant.DRestaurant.entity.*;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+@Tag("unit")
 @ExtendWith(MockitoExtension.class)
 class ReservaServiceTest {
 

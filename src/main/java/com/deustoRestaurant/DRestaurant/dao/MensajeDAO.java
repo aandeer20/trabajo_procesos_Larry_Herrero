@@ -10,8 +10,12 @@ import java.util.List;
  */
 
 public interface MensajeDAO extends JpaRepository<Mensaje, Long> {
+    /** Devuelve todos los mensajes recibidos por el usuario indicado. */
     List<Mensaje> findByDestinatarioId(Long destinatarioId);
+    /** Devuelve todos los mensajes enviados por el usuario indicado. */
     List<Mensaje> findByRemitenteId(Long remitenteId);
+    /** Devuelve los mensajes del destinatario filtrados por estado de lectura. */
     List<Mensaje> findByDestinatarioIdAndLeido(Long destinatarioId, boolean leido);
+    /** Devuelve los mensajes de una conversación entre remitente y destinatario. */
     List<Mensaje> findByRemitenteIdAndDestinatarioId(Long remitenteId, Long destinatarioId);
 }

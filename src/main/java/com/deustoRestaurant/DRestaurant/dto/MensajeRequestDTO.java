@@ -2,6 +2,9 @@ package com.deustoRestaurant.DRestaurant.dto;
 
 import lombok.Data;
 
+/**
+ * DTO de solicitud para el envío de un mensaje interno entre usuarios.
+ */
 @Data
 public class MensajeRequestDTO {
     private String contenido;

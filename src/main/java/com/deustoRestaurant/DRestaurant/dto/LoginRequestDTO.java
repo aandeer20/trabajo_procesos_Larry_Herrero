@@ -1,5 +1,8 @@
 package com.deustoRestaurant.DRestaurant.dto;
 
+/**
+ * DTO de solicitud para el inicio de sesión de un usuario.
+ */
 public class LoginRequestDTO {
     private String email;
     private String password;
