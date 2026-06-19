@@ -38,8 +38,10 @@ tasks.named('test') {
 	useJUnitPlatform()
 	finalizedBy jacocoTestReport
 	doLast {
-		def report = file("${buildDir}/reports/tests/test/index.html")
-		if (report.exists()) exec { commandLine 'cmd', '/c', 'start', report.absolutePath }
+		if (System.getProperty('os.name').toLowerCase().contains('windows')) {
+			def report = file("${buildDir}/reports/tests/test/index.html")
+			if (report.exists()) exec { commandLine 'cmd', '/c', 'start', report.absolutePath }
+		}
 	}
 }
 
@@ -66,8 +68,10 @@ jacoco {
 jacocoTestReport {
 	dependsOn test
 	doLast {
-		def report = file("${buildDir}/reports/jacoco/html/index.html")
-		if (report.exists()) exec { commandLine 'cmd', '/c', 'start', report.absolutePath }
+		if (System.getProperty('os.name').toLowerCase().contains('windows')) {
+			def report = file("${buildDir}/reports/jacoco/html/index.html")
+			if (report.exists()) exec { commandLine 'cmd', '/c', 'start', report.absolutePath }
+		}
 	}
 	reports {
 		xml.required = true
@@ -100,8 +104,10 @@ jacocoTestCoverageVerification {
 
 javadoc {
 	doLast {
-		def report = file("${buildDir}/docs/javadoc/index.html")
-		if (report.exists()) exec { commandLine 'cmd', '/c', 'start', report.absolutePath }
+		if (System.getProperty('os.name').toLowerCase().contains('windows')) {
+			def report = file("${buildDir}/docs/javadoc/index.html")
+			if (report.exists()) exec { commandLine 'cmd', '/c', 'start', report.absolutePath }
+		}
 	}
     options.encoding = 'UTF-8'
     options.locale = 'es'
